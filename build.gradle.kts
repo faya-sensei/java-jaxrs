@@ -1,31 +1,43 @@
 plugins {
-    id("java")
+    application
 }
 
 group = "org.faya.sensei"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass = "org.faya.sensei.App"
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("jakarta.platform:jakarta.jakartaee-api:10.0.0")
+    // Database & ORM
+    implementation("com.h2database:h2:2.2+")
+    implementation("org.hibernate.orm:hibernate-core:6.5.+")
 
-    implementation(platform("org.glassfish.jersey:jersey-bom:3.1.7"))
+    // Jakarta EE API
+    implementation("jakarta.platform:jakarta.jakartaee-api:10.0.+")
+
+    // Reflection
+    implementation("org.reflections:reflections:0.10.+")
+
+    // Jersey dependencies
+    implementation(platform("org.glassfish.jersey:jersey-bom:3.1+"))
     implementation("org.glassfish.jersey.inject:jersey-hk2")
+    implementation("org.glassfish.jersey.media:jersey-media-json-binding")
     implementation("org.glassfish.jersey.media:jersey-media-json-processing")
     implementation("org.glassfish.jersey.containers:jersey-container-jdk-http")
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    // Testing dependencies
+    testImplementation(platform("org.junit:junit-bom:5.10.+"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-
-    testImplementation("org.reflections:reflections:0.9.12")
-
-    testImplementation("org.mockito:mockito-core:5.12.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
+    testImplementation("org.mockito:mockito-core:5.12.+")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.12.+")
 }
 
-tasks.test {
+tasks.named<Test>("test") {
     useJUnitPlatform()
 }
