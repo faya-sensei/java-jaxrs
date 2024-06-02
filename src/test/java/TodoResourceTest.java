@@ -122,10 +122,10 @@ public class TodoResourceTest {
 
             try {
                 transaction.begin();
-                entityManager.persist(user);
-                entityManager.persist(board);
-                statuses.forEach(entityManager::persist);
-                tasks.forEach(entityManager::persist);
+                entityManager.persist(user.userEntity());
+                entityManager.persist(board.boardEntity());
+                statuses.forEach(status -> entityManager.persist(status.statusEntity()));
+                tasks.forEach(task -> entityManager.persist(task.taskEntity()));
                 transaction.commit();
             } catch (Exception e) {
                 if (transaction.isActive())
@@ -137,7 +137,7 @@ public class TodoResourceTest {
 
         @Test
         @Order(1)
-        public void testGetAllTasks() throws Exception {
+        public void testGetAllTasks() {
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos").build());
 
@@ -162,7 +162,7 @@ public class TodoResourceTest {
 
         @Test
         @Order(2)
-        public void testGetTask() throws Exception {
+        public void testGetTask() {
             final TaskEntityWrapper task = tasks.getFirst();
 
             try (Client client = ClientBuilder.newClient()) {
@@ -214,7 +214,7 @@ public class TodoResourceTest {
 
         @Test
         @Order(4)
-        public void testUpdateTask() throws Exception {
+        public void testUpdateTask() {
             final TaskEntityWrapper task = tasks.getFirst();
             final JsonObject updateTask = Json.createObjectBuilder()
                     .add("title", "New Test task")
@@ -245,7 +245,7 @@ public class TodoResourceTest {
 
         @Test
         @Order(5)
-        public void testRemoveTask() throws Exception {
+        public void testRemoveTask() {
             final TaskEntityWrapper task = tasks.getFirst();
 
             try (Client client = ClientBuilder.newClient()) {
