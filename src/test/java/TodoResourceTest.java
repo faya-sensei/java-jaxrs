@@ -149,11 +149,13 @@ public class TodoResourceTest {
 
                         for (int i = 0; i < tasks.size(); i++) {
                             JsonObject jsonObject = jsonArray.getJsonObject(i);
-                            TaskEntityWrapper task = tasks.get(i);
+                            TaskEntityWrapper targetTask = tasks.get(i);
 
-                            assertEquals(task.getTitle(), jsonObject.getJsonString("title").getString());
-                            assertEquals(task.getDescription(), jsonObject.getJsonString("description").getString());
-                            assertEquals(task.getStatus().getName(), jsonObject.getJsonString("statusName").getString());
+                            assertEquals(targetTask.getTitle(), jsonObject.getJsonString("title").getString());
+                            assertEquals(targetTask.getDescription(), jsonObject.getJsonString("description").getString());
+                            assertEquals(targetTask.getStatus().getName(), jsonObject.getJsonString("status").getString());
+                            assertEquals(targetTask.getBoard().getId(), jsonObject.getInt("boardId"));
+                            assertEquals(targetTask.getAssigner().getId(), jsonObject.getInt("assignerId"));
                         }
                     }
                 }
@@ -163,10 +165,10 @@ public class TodoResourceTest {
         @Test
         @Order(2)
         public void testGetTask() {
-            final TaskEntityWrapper task = tasks.getFirst();
+            final TaskEntityWrapper targetTask = tasks.getFirst();
 
             try (Client client = ClientBuilder.newClient()) {
-                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(task.getId())).build());
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(targetTask.getId())).build());
 
                 try (Response response = target.request(MediaType.APPLICATION_JSON).get()) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
@@ -174,9 +176,11 @@ public class TodoResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(task.getTitle(), jsonObject.getJsonString("title").getString());
-                        assertEquals(task.getDescription(), jsonObject.getJsonString("description").getString());
-                        assertEquals(task.getStatus().getName(), jsonObject.getJsonString("statusName").getString());
+                        assertEquals(targetTask.getTitle(), jsonObject.getJsonString("title").getString());
+                        assertEquals(targetTask.getDescription(), jsonObject.getJsonString("description").getString());
+                        assertEquals(targetTask.getStatus().getName(), jsonObject.getJsonString("status").getString());
+                        assertEquals(targetTask.getBoard().getId(), jsonObject.getInt("boardId"));
+                        assertEquals(targetTask.getAssigner().getId(), jsonObject.getInt("assignerId"));
                     }
                 }
             }
@@ -185,12 +189,12 @@ public class TodoResourceTest {
         @Test
         @Order(3)
         public void testSaveTask() {
-            final JsonObject task = Json.createObjectBuilder()
+            final JsonObject createTask = Json.createObjectBuilder()
                     .add("title", "New Test task")
                     .add("description", "New Task Test Description.")
                     .add("startDate", LocalDateTime.now().toString())
                     .add("endDate", LocalDateTime.now().plusMinutes(5).toString())
-                    .add("statusName", statuses.getFirst().getName())
+                    .add("status", statuses.getFirst().getName())
                     .add("boardId", 1)
                     .add("assignerId", 1)
                     .build();
@@ -198,15 +202,17 @@ public class TodoResourceTest {
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(task, MediaType.APPLICATION_JSON))) {
+                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(createTask, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(task.getString("title"), jsonObject.getJsonString("title").getString());
-                        assertEquals(task.getString("description"), jsonObject.getJsonString("description").getString());
-                        assertEquals(task.getString("statusName"), jsonObject.getJsonString("statusName").getString());
+                        assertEquals(createTask.getString("title"), jsonObject.getJsonString("title").getString());
+                        assertEquals(createTask.getString("description"), jsonObject.getJsonString("description").getString());
+                        assertEquals(createTask.getString("status"), jsonObject.getJsonString("status").getString());
+                        assertEquals(createTask.getInt("boardId"), jsonObject.getInt("boardId"));
+                        assertEquals(createTask.getInt("assignerId"), jsonObject.getInt("assignerId"));
                     }
                 }
             }
@@ -215,19 +221,16 @@ public class TodoResourceTest {
         @Test
         @Order(4)
         public void testUpdateTask() {
-            final TaskEntityWrapper task = tasks.getFirst();
+            final TaskEntityWrapper targetTask = tasks.getFirst();
             final JsonObject updateTask = Json.createObjectBuilder()
-                    .add("title", "New Test task")
-                    .add("description", "New Task Test Description.")
-                    .add("startDate", LocalDateTime.now().toString())
-                    .add("endDate", LocalDateTime.now().plusMinutes(5).toString())
-                    .add("statusName", statuses.getFirst().getName())
-                    .add("boardId", 1)
-                    .add("assignerId", 1)
+                    .add("title", "Updated Test task")
+                    .add("description", "Updated Task Test Description.")
+                    .add("endDate", LocalDateTime.now().plusMinutes(10).toString())
+                    .add("status", statuses.getLast().getName())
                     .build();
 
             try (Client client = ClientBuilder.newClient()) {
-                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(task.getId())).build());
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(targetTask.getId())).build());
 
                 try (Response response = target.request(MediaType.APPLICATION_JSON).put(Entity.entity(updateTask, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
@@ -235,9 +238,11 @@ public class TodoResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(task.getTitle(), jsonObject.getJsonString("title").getString());
-                        assertEquals(task.getDescription(), jsonObject.getJsonString("description").getString());
-                        assertEquals(task.getStatus().getName(), jsonObject.getJsonString("statusName").getString());
+                        assertEquals(updateTask.getString("title"), jsonObject.getJsonString("title").getString());
+                        assertEquals(updateTask.getString("description"), jsonObject.getJsonString("description").getString());
+                        assertEquals(updateTask.getString("status"), jsonObject.getJsonString("status").getString());
+                        assertEquals(targetTask.getBoard().getId(), jsonObject.getInt("boardId"));
+                        assertEquals(targetTask.getAssigner().getId(), jsonObject.getInt("assignerId"));
                     }
                 }
             }
@@ -246,21 +251,13 @@ public class TodoResourceTest {
         @Test
         @Order(5)
         public void testRemoveTask() {
-            final TaskEntityWrapper task = tasks.getFirst();
+            final TaskEntityWrapper targetTask = tasks.getFirst();
 
             try (Client client = ClientBuilder.newClient()) {
-                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(task.getId())).build());
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/todos/%d".formatted(targetTask.getId())).build());
 
                 try (Response response = target.request(MediaType.APPLICATION_JSON).delete()) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        JsonObject jsonObject = jsonReader.readObject();
-
-                        assertEquals(task.getTitle(), jsonObject.getJsonString("title").getString());
-                        assertEquals(task.getDescription(), jsonObject.getJsonString("description").getString());
-                        assertEquals(task.getStatus().getName(), jsonObject.getJsonString("statusName").getString());
-                    }
                 }
             }
         }

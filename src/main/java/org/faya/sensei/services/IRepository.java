@@ -56,7 +56,7 @@ public interface IRepository<T> {
      *
      * @param id The id of the item.
      * @param item The updated item.
-     * @return The original item.
+     * @return The updated item.
      */
     Optional<T> put(int id, T item);
 
