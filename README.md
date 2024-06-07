@@ -274,23 +274,18 @@ problem is avoided. Implement the todo list endpoint.
 
 ### Instruction:
 
-In modern web development, there is a wide variety of client-side frameworks and
-libraries to build dynamic user interfaces. However, in certain scenarios,
-especially when dealing with a single client component, simple logic, and
-lightweight payloads, server-side rendering (SSR) proves to be an efficient and
-effective solution. SSR can offer several advantages such as improved
-performance, better SEO, and easier maintenance.
-
-In this task, we will implement a web page for our todo list application using
-server-side rendering. This will involve creating an endpoint that serves an
-HTML page. The HTML page will allow users to view their todo list and add new
-tasks.
+In this task, we aim to create a web page that allows users to manage their todo
+list. To achieve this, we will utilize web components. Given that tasks and
+their statuses are highly independent and require interactivity, web components
+will enable efficient encapsulation of the logic and behavior for these
+interactive elements. This will allow users to drag and drop tasks between
+different statuses seamlessly.
 
 ### Details:
 
-* Endpoint: _**/**_
-* Method: `GET`
-* Response: An HTML page displaying the list of todos and a form to add new tasks.
+* **Endpoint**: _**/**_
+* **Method**: `GET`
+* **Response**: An HTML page displaying the list of todos and a form to add new tasks.
   - A table or list to display the current todo items.
   - A form with an input field for adding new tasks.
   - Include buttons for update or delete tasks.

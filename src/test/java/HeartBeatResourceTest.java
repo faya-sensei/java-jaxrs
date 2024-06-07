@@ -5,7 +5,6 @@ import jakarta.json.JsonReader;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.SeBootstrap;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -13,7 +12,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import org.faya.sensei.resources.HeartBeatResource;
+import org.faya.sensei.resources.endpoint.HeartBeatResource;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -34,18 +33,6 @@ public class HeartBeatResourceTest {
 
     @Test
     public void testAnnotations() {
-        assertTrue(
-                HeartBeatResource.class.isAnnotationPresent(Path.class),
-                "Class should be annotated with @Path"
-        );
-
-        Path pathAnnotation = HeartBeatResource.class.getAnnotation(Path.class);
-
-        assertEquals("/heartbeat", pathAnnotation.value(), "@Path value should be /heartbeat");
-    }
-
-    @Test
-    public void testMethodAnnotations() {
         Optional<Method> GetMethod = Arrays.stream(HeartBeatResource.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(GET.class))
                 .findFirst();

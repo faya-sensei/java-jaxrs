@@ -21,9 +21,6 @@ dependencies {
     // Jakarta EE API
     implementation("jakarta.platform:jakarta.jakartaee-api:10.0.+")
 
-    // Reflection
-    implementation("org.reflections:reflections:0.10.+")
-
     // Jersey dependencies
     implementation(platform("org.glassfish.jersey:jersey-bom:3.1+"))
     implementation("org.glassfish.jersey.inject:jersey-hk2")

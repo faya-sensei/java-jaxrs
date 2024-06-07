@@ -1,4 +1,4 @@
-package org.faya.sensei.resources;
+package org.faya.sensei.resources.endpoint;
 
 import jakarta.inject.Inject;
 import org.faya.sensei.entities.BoardEntity;

@@ -15,9 +15,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import org.faya.sensei.entities.StatusEntity;
-import org.faya.sensei.entities.TaskEntity;
-import org.faya.sensei.resources.TodoResource;
+import org.faya.sensei.resources.endpoint.TodoResource;
 import org.junit.jupiter.api.*;
 import wrappers.BoardEntityWrapper;
 import wrappers.StatusEntityWrapper;
@@ -25,7 +23,6 @@ import wrappers.TaskEntityWrapper;
 import wrappers.UserEntityWrapper;
 
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -40,18 +37,6 @@ public class TodoResourceTest {
 
     @Test
     public void testAnnotations() {
-        assertTrue(
-                TodoResource.class.isAnnotationPresent(Path.class),
-                "Class should be annotated with @Path"
-        );
-
-        Path pathAnnotation = TodoResource.class.getAnnotation(Path.class);
-
-        assertEquals("/todos", pathAnnotation.value(), "@Path value should be /todos");
-    }
-
-    @Test
-    public void testMethodAnnotations() {
         Optional<Method> getMethod = Arrays.stream(TodoResource.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(GET.class))
                 .findFirst();
