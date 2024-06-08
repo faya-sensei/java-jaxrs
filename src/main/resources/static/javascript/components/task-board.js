@@ -1,12 +1,9 @@
+import {getAllTasks} from "../api.js";
+
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
-:host {
-    display: block;
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin: 10px;
-    background-color: white;
-    cursor: move;
+.container {
+  display: flex;
 }
 `;
 
@@ -21,19 +18,29 @@ export class TaskBoard extends HTMLElement {
         shadowRoot.adoptedStyleSheets = [styleSheet];
 
         const container = shadowRoot.appendChild(document.createElement("div"));
-        container.className = "board";
+        container.className = "container";
 
         this.handleTaskDropped = this.handleTaskDropped.bind(this);
         this.handleTaskCreated = this.handleTaskCreated.bind(this);
 
-        this.#elements = {
-            container
-        };
+        this.#elements = { container };
     }
 
     connectedCallback() {
         this.addEventListener("task-dropped", this.handleTaskDropped);
         this.addEventListener("task-created", this.handleTaskCreated);
+
+        getAllTasks().then(tasks => {
+            for (const task of tasks) {
+                if (this.#taskStatuses.has(task.status)) {
+                    this.#taskStatuses.set(task.status, [...this.#taskStatuses.get(task.status), task]);
+                } else {
+                    this.#taskStatuses.set(task.status, [task]);
+                }
+            }
+
+            this.updateElements();
+        });
     }
 
     disconnectedCallback() {
@@ -52,7 +59,7 @@ export class TaskBoard extends HTMLElement {
         task.status = status;
 
         this.#taskStatuses.get(status).push(task);
-        this.render();
+        this.updateElements();
     }
 
     handleTaskCreated(event) {

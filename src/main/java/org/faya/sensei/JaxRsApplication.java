@@ -2,9 +2,7 @@ package org.faya.sensei;
 
 import jakarta.ws.rs.core.Application;
 import org.faya.sensei.resources.EndpointResource;
-import org.faya.sensei.resources.endpoint.HeartBeatResource;
 import org.faya.sensei.resources.StaticFileResource;
-import org.faya.sensei.resources.endpoint.TodoResource;
 
 import java.util.Set;
 

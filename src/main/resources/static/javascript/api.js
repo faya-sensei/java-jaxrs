@@ -16,8 +16,10 @@
  * @property {string} name The name of the user.
  */
 
+export const BASE_URL = new URL(globalThis.config.uri).origin
+
 export const API = {
-    todos: "api/todos",
+    todos: `${BASE_URL}/api/todos`,
 }
 
 /**
