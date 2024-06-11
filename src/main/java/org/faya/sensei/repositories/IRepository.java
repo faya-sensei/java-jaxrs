@@ -1,4 +1,4 @@
-package org.faya.sensei.services;
+package org.faya.sensei.repositories;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +10,9 @@ public interface IRepository<T> {
      *
      * @return The list of items.
      */
-    Collection<T> get();
+    default Collection<T> get() {
+        return List.of();
+    }
 
     /**
      * Fetch an item from storage by primary key.
@@ -39,7 +41,7 @@ public interface IRepository<T> {
      * @param value The query value of the foreign key.
      * @return The list of items.
      */
-    default Collection<T> foreignGet(String key, String value)  {
+    default Collection<T> getBy(String key, String value)  {
         return List.of();
     }
 

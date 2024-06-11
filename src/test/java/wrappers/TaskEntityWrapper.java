@@ -1,6 +1,6 @@
 package wrappers;
 
-import org.faya.sensei.entities.BoardEntity;
+import org.faya.sensei.entities.ProjectEntity;
 import org.faya.sensei.entities.StatusEntity;
 import org.faya.sensei.entities.TaskEntity;
 import org.faya.sensei.entities.UserEntity;
@@ -16,7 +16,7 @@ public record TaskEntityWrapper(TaskEntity taskEntity) {
     private static final VarHandle descriptionHandle;
     private static final VarHandle startDateHandle;
     private static final VarHandle endDateHandle;
-    private static final VarHandle boardHandle;
+    private static final VarHandle projectHandle;
     private static final VarHandle statusHandle;
     private static final VarHandle assignerHandle;
 
@@ -28,7 +28,7 @@ public record TaskEntityWrapper(TaskEntity taskEntity) {
             descriptionHandle = lookup.findVarHandle(TaskEntity.class, "description", String.class);
             startDateHandle = lookup.findVarHandle(TaskEntity.class, "startDate", LocalDateTime.class);
             endDateHandle = lookup.findVarHandle(TaskEntity.class, "endDate", LocalDateTime.class);
-            boardHandle = lookup.findVarHandle(TaskEntity.class, "board", BoardEntity.class);
+            projectHandle = lookup.findVarHandle(TaskEntity.class, "project", ProjectEntity.class);
             statusHandle = lookup.findVarHandle(TaskEntity.class, "status", StatusEntity.class);
             assignerHandle = lookup.findVarHandle(TaskEntity.class, "assigner", UserEntity.class);
         } catch (ReflectiveOperationException e) {
@@ -76,12 +76,12 @@ public record TaskEntityWrapper(TaskEntity taskEntity) {
         endDateHandle.set(taskEntity, endDate);
     }
 
-    public BoardEntityWrapper getBoard() {
-        return new BoardEntityWrapper((BoardEntity) boardHandle.get(taskEntity));
+    public ProjectEntityWrapper getProject() {
+        return new ProjectEntityWrapper((ProjectEntity) projectHandle.get(taskEntity));
     }
 
-    public void setBoard(BoardEntity board) {
-        boardHandle.set(taskEntity, board);
+    public void setProject(ProjectEntity project) {
+        projectHandle.set(taskEntity, project);
     }
 
     public StatusEntityWrapper getStatus() {

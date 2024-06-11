@@ -1,14 +1,22 @@
 package org.faya.sensei.entities;
 
+import jakarta.persistence.Table;
+
 import java.io.Serializable;
 import java.util.List;
 
-public class BoardEntity implements Serializable {
+@Table(name = "projects")
+public class ProjectEntity implements Serializable {
 
     /**
-     * The primary key of the board.
+     * The primary key of the project.
      */
     private Integer id;
+
+    /**
+     * The name of the project.
+     */
+    private String name;
 
     /**
      * The many-to-many relationship with {@link UserEntity}. (hidden in database)

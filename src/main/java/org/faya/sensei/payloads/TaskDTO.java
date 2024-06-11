@@ -1,5 +1,7 @@
 package org.faya.sensei.payloads;
 
+import org.faya.sensei.entities.TaskEntity;
+
 import java.time.LocalDateTime;
 
 public final class TaskDTO {
@@ -16,7 +18,17 @@ public final class TaskDTO {
 
     private String status;
 
-    private Integer boardId;
+    private Integer projectId;
 
     private Integer assignerId;
+
+    // Converters
+
+    public static TaskEntity toEntity(final TaskDTO taskDTO) {
+        return new TaskEntity();
+    }
+
+    public static TaskDTO fromEntity(final TaskEntity taskEntity) {
+        return new TaskDTO();
+    }
 }

@@ -6,7 +6,7 @@
     <persistence-unit name="java-jaxrs-database">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>org.faya.sensei.entities.UserEntity</class>
-        <class>org.faya.sensei.entities.BoardEntity</class>
+        <class>org.faya.sensei.entities.ProjectEntity</class>
         <class>org.faya.sensei.entities.StatusEntity</class>
         <class>org.faya.sensei.entities.TaskEntity</class>
         <properties>

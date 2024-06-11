@@ -28,6 +28,12 @@ dependencies {
     implementation("org.glassfish.jersey.media:jersey-media-json-processing")
     implementation("org.glassfish.jersey.containers:jersey-container-jdk-http")
 
+    // Reflection
+    implementation("org.reflections:reflections:0.10.+")
+
+    // Json web token
+    implementation("com.auth0:java-jwt:4.4.+")
+
     // Testing dependencies
     testImplementation(platform("org.junit:junit-bom:5.10.+"))
     testImplementation("org.junit.jupiter:junit-jupiter")

@@ -1,8 +1,11 @@
 package org.faya.sensei.entities;
 
+import jakarta.persistence.Table;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Table(name = "tasks")
 public class TaskEntity implements Serializable {
 
     /**
@@ -31,9 +34,9 @@ public class TaskEntity implements Serializable {
     private LocalDateTime endDate;
 
     /**
-     * The many-to-one relationship with {@link BoardEntity}.
+     * The many-to-one relationship with {@link ProjectEntity}.
      */
-    private BoardEntity board;
+    private ProjectEntity project;
 
     /**
      * The many-to-one relationship with {@link StatusEntity}.

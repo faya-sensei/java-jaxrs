@@ -1,8 +1,5 @@
 import jakarta.persistence.*;
-import org.faya.sensei.entities.BoardEntity;
-import org.faya.sensei.entities.StatusEntity;
-import org.faya.sensei.entities.TaskEntity;
-import org.faya.sensei.entities.UserEntity;
+import org.faya.sensei.entities.*;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EntityGraphDesignTest {
+public class EntityDesignTest {
 
     public static String parseAnnotationMissingMessage(String annotation, String className, String fieldName) {
         return String.join(" ", List.of(
@@ -53,12 +50,12 @@ public class EntityGraphDesignTest {
         }
 
         @Test
-        public void testBoardEntityRelationship() throws Exception {
-            Field boardsField = UserEntity.class.getDeclaredField("boards");
+        public void testProjectEntityRelationship() throws Exception {
+            Field projectsField = UserEntity.class.getDeclaredField("projects");
 
             assertTrue(
-                    boardsField.isAnnotationPresent(ManyToMany.class),
-                    parseAnnotationMissingMessage(ManyToMany.class.getSimpleName(), className, "boards")
+                    projectsField.isAnnotationPresent(ManyToMany.class),
+                    parseAnnotationMissingMessage(ManyToMany.class.getSimpleName(), className, "projects")
             );
         }
 
@@ -77,7 +74,8 @@ public class EntityGraphDesignTest {
             UserEntity user = new UserEntity();
             Integer id = 1;
             String name = "User";
-            List<BoardEntity> boards = new ArrayList<>();
+            UserRole role = UserRole.ADMIN;
+            List<ProjectEntity> projects = new ArrayList<>();
             List<TaskEntity> assignedTasks = new ArrayList<>();
 
             Method setId = UserEntity.class.getMethod("setId", Integer.class);
@@ -90,10 +88,15 @@ public class EntityGraphDesignTest {
             setName.invoke(user, name);
             assertEquals(name, getName.invoke(user), "getName or setName is incorrect in %s.".formatted(className));
 
-            Method setBoards = UserEntity.class.getMethod("setBoards", List.class);
-            Method getBoards = UserEntity.class.getMethod("getBoards");
-            setBoards.invoke(user, boards);
-            assertEquals(boards, getBoards.invoke(user), "getBoards or setBoards is incorrect in %s.".formatted(className));
+            Method setRole = UserEntity.class.getMethod("setRole", UserRole.class);
+            Method getRole = UserEntity.class.getMethod("getRole");
+            setRole.invoke(user, role);
+            assertEquals(role, getRole.invoke(user), "getRole or setRole is incorrect in %s.".formatted(className));
+
+            Method setProjects = UserEntity.class.getMethod("setProjects", List.class);
+            Method getProjects = UserEntity.class.getMethod("getProjects");
+            setProjects.invoke(user, projects);
+            assertEquals(projects, getProjects.invoke(user), "getProjects or setProjects is incorrect in %s.".formatted(className));
 
             Method setAssignedTasks = UserEntity.class.getMethod("setAssignedTasks", List.class);
             Method getAssignedTasks = UserEntity.class.getMethod("getAssignedTasks");
@@ -103,21 +106,21 @@ public class EntityGraphDesignTest {
     }
 
     @Nested
-    public class BoardEntityTests {
+    public class ProjectEntityTests {
 
-        private final String className = BoardEntity.class.getSimpleName();
+        private final String className = ProjectEntity.class.getSimpleName();
 
         @Test
         public void testEntityAnnotation() {
             assertTrue(
-                    BoardEntity.class.isAnnotationPresent(Entity.class),
+                    ProjectEntity.class.isAnnotationPresent(Entity.class),
                     parseAnnotationMissingMessage(Entity.class.getSimpleName(), className, null)
             );
         }
 
         @Test
         public void testIdAnnotation() throws Exception {
-            Field idField = BoardEntity.class.getDeclaredField("id");
+            Field idField = ProjectEntity.class.getDeclaredField("id");
 
             assertTrue(
                     idField.isAnnotationPresent(Id.class),
@@ -131,7 +134,7 @@ public class EntityGraphDesignTest {
 
         @Test
         public void testUserEntityRelationship() throws Exception {
-            Field usersField = BoardEntity.class.getDeclaredField("users");
+            Field usersField = ProjectEntity.class.getDeclaredField("users");
 
             assertTrue(
                     usersField.isAnnotationPresent(ManyToMany.class),
@@ -141,7 +144,7 @@ public class EntityGraphDesignTest {
 
         @Test
         public void testTaskEntityRelationship() throws Exception {
-            Field tasksField = BoardEntity.class.getDeclaredField("tasks");
+            Field tasksField = ProjectEntity.class.getDeclaredField("tasks");
 
             assertTrue(
                     tasksField.isAnnotationPresent(OneToMany.class),
@@ -151,7 +154,7 @@ public class EntityGraphDesignTest {
 
         @Test
         public void testStatusEntityRelationship() throws Exception {
-            Field statusesField = BoardEntity.class.getDeclaredField("statuses");
+            Field statusesField = ProjectEntity.class.getDeclaredField("statuses");
 
             assertTrue(
                     statusesField.isAnnotationPresent(OneToMany.class),
@@ -161,31 +164,31 @@ public class EntityGraphDesignTest {
 
         @Test
         public void testGettersAndSetters() throws Exception {
-            BoardEntity board = new BoardEntity();
+            ProjectEntity project = new ProjectEntity();
             Integer id = 1;
             List<UserEntity> users = new ArrayList<>();
             List<StatusEntity> statuses = new ArrayList<>();
             List<TaskEntity> tasks = new ArrayList<>();
 
-            Method setId = BoardEntity.class.getMethod("setId", Integer.class);
-            Method getId = BoardEntity.class.getMethod("getId");
-            setId.invoke(board, id);
-            assertEquals(id, getId.invoke(board), "getId or setId is incorrect in %s.".formatted(className));
+            Method setId = ProjectEntity.class.getMethod("setId", Integer.class);
+            Method getId = ProjectEntity.class.getMethod("getId");
+            setId.invoke(project, id);
+            assertEquals(id, getId.invoke(project), "getId or setId is incorrect in %s.".formatted(className));
 
-            Method setUsers = BoardEntity.class.getMethod("setUsers", List.class);
-            Method getUsers = BoardEntity.class.getMethod("getUsers");
-            setUsers.invoke(board, users);
-            assertEquals(users, getUsers.invoke(board), "getUsers or setUsers is incorrect in %s.".formatted(className));
+            Method setUsers = ProjectEntity.class.getMethod("setUsers", List.class);
+            Method getUsers = ProjectEntity.class.getMethod("getUsers");
+            setUsers.invoke(project, users);
+            assertEquals(users, getUsers.invoke(project), "getUsers or setUsers is incorrect in %s.".formatted(className));
 
-            Method setStatuses = BoardEntity.class.getMethod("setStatuses", List.class);
-            Method getStatuses = BoardEntity.class.getMethod("getStatuses");
-            setStatuses.invoke(board, statuses);
-            assertEquals(statuses, getStatuses.invoke(board), "getStatuses or setStatuses is incorrect in %s.".formatted(className));
+            Method setStatuses = ProjectEntity.class.getMethod("setStatuses", List.class);
+            Method getStatuses = ProjectEntity.class.getMethod("getStatuses");
+            setStatuses.invoke(project, statuses);
+            assertEquals(statuses, getStatuses.invoke(project), "getStatuses or setStatuses is incorrect in %s.".formatted(className));
 
-            Method setTasks = BoardEntity.class.getMethod("setTasks", List.class);
-            Method getTasks = BoardEntity.class.getMethod("getTasks");
-            setTasks.invoke(board, tasks);
-            assertEquals(tasks, getTasks.invoke(board), "getTasks or setTasks is incorrect in %s.".formatted(className));
+            Method setTasks = ProjectEntity.class.getMethod("setTasks", List.class);
+            Method getTasks = ProjectEntity.class.getMethod("getTasks");
+            setTasks.invoke(project, tasks);
+            assertEquals(tasks, getTasks.invoke(project), "getTasks or setTasks is incorrect in %s.".formatted(className));
         }
     }
 
@@ -217,12 +220,12 @@ public class EntityGraphDesignTest {
         }
 
         @Test
-        public void testBoardEntityRelationship() throws Exception {
-            Field boardField = StatusEntity.class.getDeclaredField("board");
+        public void testProjectEntityRelationship() throws Exception {
+            Field projectField = StatusEntity.class.getDeclaredField("project");
 
             assertTrue(
-                    boardField.isAnnotationPresent(ManyToOne.class),
-                    parseAnnotationMissingMessage(ManyToOne.class.getSimpleName(), className, "board")
+                    projectField.isAnnotationPresent(ManyToOne.class),
+                    parseAnnotationMissingMessage(ManyToOne.class.getSimpleName(), className, "project")
             );
         }
 
@@ -241,7 +244,7 @@ public class EntityGraphDesignTest {
             StatusEntity status = new StatusEntity();
             Integer id = 1;
             String name = "Todo";
-            BoardEntity board = new BoardEntity();
+            ProjectEntity project = new ProjectEntity();
             List<TaskEntity> tasks = new ArrayList<>();
 
             Method setId = StatusEntity.class.getMethod("setId", Integer.class);
@@ -254,10 +257,10 @@ public class EntityGraphDesignTest {
             setName.invoke(status, name);
             assertEquals(name, getName.invoke(status), "getName or setName is incorrect in %s.".formatted(className));
 
-            Method setBoard = StatusEntity.class.getMethod("setBoard", BoardEntity.class);
-            Method getBoard = StatusEntity.class.getMethod("getBoard");
-            setBoard.invoke(status, board);
-            assertEquals(board, getBoard.invoke(status), "getBoard or setBoard is incorrect in %s.".formatted(className));
+            Method setProject = StatusEntity.class.getMethod("setProject", ProjectEntity.class);
+            Method getProject = StatusEntity.class.getMethod("getProject");
+            setProject.invoke(status, project);
+            assertEquals(project, getProject.invoke(status), "getProject or setProject is incorrect in %s.".formatted(className));
 
             Method setTasks = StatusEntity.class.getMethod("setTasks", List.class);
             Method getTasks = StatusEntity.class.getMethod("getTasks");
@@ -294,12 +297,12 @@ public class EntityGraphDesignTest {
         }
 
         @Test
-        public void testManyToOneAnnotationOnBoard() throws Exception {
-            Field boardField = TaskEntity.class.getDeclaredField("board");
+        public void testManyToOneAnnotationOnProject() throws Exception {
+            Field projectField = TaskEntity.class.getDeclaredField("project");
 
             assertTrue(
-                    boardField.isAnnotationPresent(ManyToOne.class),
-                    parseAnnotationMissingMessage(ManyToOne.class.getSimpleName(), className, "board")
+                    projectField.isAnnotationPresent(ManyToOne.class),
+                    parseAnnotationMissingMessage(ManyToOne.class.getSimpleName(), className, "project")
             );
         }
 
@@ -331,7 +334,7 @@ public class EntityGraphDesignTest {
             String description = "Task Description";
             LocalDateTime startDate = LocalDateTime.now();
             LocalDateTime endDate = LocalDateTime.now().plusDays(1);
-            BoardEntity board = new BoardEntity();
+            ProjectEntity project = new ProjectEntity();
             StatusEntity status = new StatusEntity();
             UserEntity assigner = new UserEntity();
 
@@ -360,10 +363,10 @@ public class EntityGraphDesignTest {
             setEndDate.invoke(task, endDate);
             assertEquals(endDate, getEndDate.invoke(task), "getEndDate or setEndDate is incorrect in %s.".formatted(className));
 
-            Method setBoard = TaskEntity.class.getMethod("setBoard", BoardEntity.class);
-            Method getBoard = TaskEntity.class.getMethod("getBoard");
-            setBoard.invoke(task, board);
-            assertEquals(board, getBoard.invoke(task), "getBoard or setBoard is incorrect in %s.".formatted(className));
+            Method setProject = TaskEntity.class.getMethod("setProject", ProjectEntity.class);
+            Method getProject = TaskEntity.class.getMethod("getProject");
+            setProject.invoke(task, project);
+            assertEquals(project, getProject.invoke(task), "getProject or setProject is incorrect in %s.".formatted(className));
 
             Method setStatus = TaskEntity.class.getMethod("setStatus", StatusEntity.class);
             Method getStatus = TaskEntity.class.getMethod("getStatus");
