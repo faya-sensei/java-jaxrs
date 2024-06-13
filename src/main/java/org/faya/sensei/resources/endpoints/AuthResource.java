@@ -1,4 +1,4 @@
-package org.faya.sensei.resources.endpoint;
+package org.faya.sensei.resources.endpoints;
 
 import jakarta.inject.Inject;
 import jakarta.json.Json;

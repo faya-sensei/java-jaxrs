@@ -1,7 +1,8 @@
 - [The Introduction Of The JAX-RS](#introduction)
-- [Task List](#tasks)
+- [Task Journal List](#tasks)
   - [Implement a Heartbeat Endpoint](#1-implement-a-heartbeat-endpoint)
-  - [Implement a Todo List Endpoint](#2-implement-a-todo-list-endpoint)
+  - [Implement Authorization and Authentication Endpoint](#2-implement-authorization-and-authentication-endpoint)
+  - [Implement a Todo List Endpoint](#3-implement-a-todo-list-endpoint)
   - [Let's Design a Web Page](#3-lets-design-a-web-page)
   - [Make Server Data Flow](#4-make-server-data-flow)
 
@@ -61,7 +62,7 @@ configured and run Gradle sync to install dependencies correctly.
 > differences between environments.
 
 2. **Define the endpoint**: Use JAX-RS annotations to define the endpoint and
-implement the logic in `resources/HeartBeatResource.java`.
+implement the logic in `resources/endpoint/HeartBeatResource.java`.
 
 ### Requirement:
 
@@ -84,7 +85,41 @@ implement the logic in `resources/HeartBeatResource.java`.
   </ul>
 </details>
 
-## 2. Implement a Todo List Endpoint
+## 2. Implement Authorization Endpoint and Authentication Middleware
+
+### Instruction:
+
+Authorization and authentication are critical components in web services. JWT
+(JSON Web Token) is one of the simplest and most secure ways to manage user
+authentication. In this task, you will implement endpoints for user registration
+and login.
+
+### Requirement:
+
+#### Authorization
+
+* **Endpoint**: _**/api/auth/register**_ and _**/api/auth/login**_
+* **Method**: `POST`
+* * **Request**: JSON object containing user login or registration details, e.g.:
+```json
+{
+  "name": "foo",
+  "password": "bar"
+}
+```
+* **Response**: JSON object of the token, e.g.:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaGVsbG8iOiJ3b3JsZCJ9.zfK3ZdyzfyVxXtoceMTnzD7VfhK30N0s0D8zoerVzL8"
+}
+```
+
+#### JWT Auth Middleware
+
+Implement `ContainerRequestFilter` and implement the `SecurityContext` and set 
+into `ContainerRequestContext`.
+
+## 3. Implement a Todo List Endpoint
 
 ### Instruction:
 

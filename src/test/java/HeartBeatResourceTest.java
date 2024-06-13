@@ -12,7 +12,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import org.faya.sensei.resources.endpoint.HeartBeatResource;
+import org.faya.sensei.resources.endpoints.HeartBeatResource;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
