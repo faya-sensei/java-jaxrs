@@ -8,7 +8,7 @@ public interface IRepository<T> {
     /**
      * Fetch all items from storage.
      *
-     * @return The list of items.
+     * @return The collection of items.
      */
     default Collection<T> get() {
         return List.of();
@@ -17,7 +17,7 @@ public interface IRepository<T> {
     /**
      * Fetch an item from storage by primary key.
      *
-     * @param id The id of the item.
+     * @param id The primary key of the item.
      * @return The item.
      */
     default Optional<T> get(int id) {
@@ -39,7 +39,7 @@ public interface IRepository<T> {
      *
      * @param key The name of the foreign key.
      * @param value The query value of the foreign key.
-     * @return The list of items.
+     * @return The collection of items.
      */
     default Collection<T> getBy(String key, String value)  {
         return List.of();

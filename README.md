@@ -1,5 +1,5 @@
 - [The Introduction Of The JAX-RS](#introduction)
-- [Task Journal List](#tasks)
+- [Task Check List](#tasks)
   - [Implement a Heartbeat Endpoint](#1-implement-a-heartbeat-endpoint)
   - [Implement Authorization and Authentication Endpoint](#2-implement-authorization-and-authentication-endpoint)
   - [Implement a Todo List Endpoint](#3-implement-a-todo-list-endpoint)

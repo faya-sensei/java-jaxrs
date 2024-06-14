@@ -6,56 +6,57 @@ import java.util.Optional;
 
 public interface IService<T> {
     /**
-     * Get an item from repository by primary key.
+     * Retrieves an item from the repository by primary key.
      *
-     * @param id The id of the item.
-     * @return The item.
+     * @param id The primary key of the item.
+     * @return The nullable item.
      */
     default Optional<T> get(final int id) {
         return Optional.empty();
     }
 
     /**
-     * Get an item from repository by unique key.
+     * Retrieves an item from repository by unique key.
      *
      * @param key The unique key of the item.
-     * @return The item.
+     * @return The nullable item.
      */
     default Optional<T> get(String key)  {
         return Optional.empty();
     }
 
     /**
-     * Get the reference items from repository.
+     * Retrieves a collection of items from repository based on a foreign key.
      *
      * @param key The key of the foreign item.
      * @param value The search value of the foreign item.
-     * @return The list of items.
+     * @return A collection of items.
      */
     default Collection<T> getBy(String key, String value)  {
         return List.of();
     }
 
     /**
-     * Create an item to repository.
+     * Create a new item in the repository.
      *
-     * @param dto The item to create.
-     * @return The created item id.
+     * @param dto The data transfer object.
+     * @return The nullable created item.
      */
     Optional<T> create(final T dto);
 
     /**
-     * Update an item in repository.
+     * Update an existing item in existing repository.
      *
-     * @param dto The updated item.
-     * @return The updated item.
+     * @param id The primary key of the item to be updated.
+     * @param dto The data transfer object.
+     * @return The nullable updated item.
      */
     Optional<T> update(final int id, final T dto);
 
     /**
-     * Remove an item from repository.
+     * Remove an item from the repository based on id.
      *
-     * @param id The id of remove item.
+     * @param id The primary key of the item to be removed.
      * @return The operation result.
      */
     boolean remove(final int id);

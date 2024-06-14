@@ -6,14 +6,14 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.faya.sensei.payloads.UserDTO;
-import org.faya.sensei.services.AuthService;
+import org.faya.sensei.services.IAuthService;
 
 import java.util.Optional;
 
 public class AuthResource {
 
     @Inject
-    private AuthService authService;
+    private IAuthService authService;
 
     @POST
     @Path("/register")
