@@ -29,5 +29,5 @@ public interface IAuthService extends IService<UserDTO> {
      * @param token The jwt bearer token.
      * @return The resolved user payload.
      */
-    Optional<UserPrincipal> parseToken(final String token);
+    Optional<UserPrincipal> resolveToken(final String token);
 }

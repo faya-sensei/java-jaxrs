@@ -169,12 +169,12 @@ public class AuthResourceTest {
             }
 
             @Test
-            public void testAuthService_ParseToken() {
+            public void testAuthService_ResolveToken() {
                 Optional<String> token = authService.generateToken("1", "user");
 
                 assertTrue(token.isPresent());
 
-                Optional<UserPrincipal> userPrincipal = authService.parseToken(token.get());
+                Optional<UserPrincipal> userPrincipal = authService.resolveToken(token.get());
 
                 assertTrue(userPrincipal.isPresent());
             }

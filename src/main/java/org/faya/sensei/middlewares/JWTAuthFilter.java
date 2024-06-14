@@ -33,7 +33,7 @@ public class JWTAuthFilter implements ContainerRequestFilter {
 
         String token = authorizationHeader.substring("Bearer".length()).trim();
 
-        Optional<UserPrincipal> user = authService.parseToken(token);
+        Optional<UserPrincipal> user = authService.resolveToken(token);
         if (user.isPresent()) {
             requestContext.setSecurityContext(new SecurityContext() {
                 @Override
