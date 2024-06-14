@@ -33,11 +33,11 @@ public class HeartBeatResourceTest {
 
     @Test
     public void testAnnotations() {
-        Optional<Method> GetMethod = Arrays.stream(HeartBeatResource.class.getDeclaredMethods())
+        Optional<Method> getMethod = Arrays.stream(HeartBeatResource.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(GET.class))
                 .findFirst();
 
-        assertTrue(GetMethod.isPresent(), "One method under claas should be annotated with @GET");
+        assertTrue(getMethod.isPresent(), "One method under claas should be annotated with @GET");
     }
 
     @Nested
