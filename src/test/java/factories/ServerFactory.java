@@ -7,8 +7,6 @@ import jakarta.ws.rs.SeBootstrap;
 import org.faya.sensei.JaxRsApplication;
 import org.faya.sensei.middlewares.JWTAuthFilter;
 import org.faya.sensei.repositories.IRepository;
-import org.faya.sensei.services.AuthService;
-import org.faya.sensei.services.IAuthService;
 import org.faya.sensei.services.IService;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -37,10 +35,7 @@ public class ServerFactory {
                         .in(Singleton.class);
 
                 bindImplementations("org.faya.sensei.repositories", IRepository.class);
-                bindImplementations("org.faya.sensei.services", IAuthService.class);
                 bindImplementations("org.faya.sensei.services", IService.class);
-
-                bind(AuthService.class).to(AuthService.class).in(Singleton.class);
             }
 
             private <T> void bindImplementations(String basePackage, Class<T> interfaceClass) {

@@ -16,6 +16,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.faya.sensei.entities.UserEntity;
 import org.faya.sensei.entities.UserRole;
+import org.faya.sensei.payloads.UserDTO;
 import org.faya.sensei.payloads.UserPrincipal;
 import org.faya.sensei.repositories.IRepository;
 import org.faya.sensei.resources.endpoints.HeartBeatResource;
@@ -151,20 +152,20 @@ public class AuthResourceTest {
             public void testAuthService_Register() {
                 when(userRepository.post(any(UserEntity.class))).thenReturn(1);
 
-                Optional<String> token = authService.register(userDTO.userDTO());
+                Optional<UserDTO> user = authService.create(userDTO.userDTO());
 
                 verify(userRepository, times(1)).post(any(UserEntity.class));
-                assertTrue(token.isPresent());
+                assertTrue(user.isPresent());
             }
 
             @Test
             public void testAuthService_Login() {
                 when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity.userEntity()));
 
-                Optional<String> token = authService.login(userDTO.userDTO());
+                Optional<UserDTO> user = authService.login(userDTO.userDTO());
 
                 verify(userRepository, times(1)).get(userDTO.getName());
-                assertTrue(token.isPresent());
+                assertTrue(user.isPresent());
             }
 
             @Test

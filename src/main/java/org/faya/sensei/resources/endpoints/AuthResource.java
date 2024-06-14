@@ -2,6 +2,8 @@ package org.faya.sensei.resources.endpoints;
 
 import jakarta.inject.Inject;
 import jakarta.json.Json;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
@@ -18,20 +20,28 @@ public class AuthResource {
     @POST
     @Path("/register")
     public Response register(final UserDTO user) {
-        Optional<String> token = authService.register(user);
+        try (Jsonb binder = JsonbBuilder.create()) {
+            Optional<UserDTO> userDTO = authService.create(user);
 
-        return token.isPresent()
-                ? Response.ok(Json.createObjectBuilder().add("token", token.get()).build()).build()
-                : Response.status(Response.Status.UNAUTHORIZED).build();
+            return userDTO.isPresent()
+                    ? Response.ok(binder.toJson(userDTO.get())).build()
+                    : Response.status(Response.Status.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
 
     @POST
     @Path("/login")
     public Response login(final UserDTO user) {
-        Optional<String> token = authService.login(user);
+        try (Jsonb binder = JsonbBuilder.create()) {
+            Optional<UserDTO> userDTO = authService.login(user);
 
-        return token.isPresent()
-                ? Response.ok(Json.createObjectBuilder().add("token", token.get()).build()).build()
-                : Response.status(Response.Status.UNAUTHORIZED).build();
+            return userDTO.isPresent()
+                    ? Response.ok(binder.toJson(userDTO.get())).build()
+                    : Response.status(Response.Status.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
 }

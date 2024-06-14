@@ -5,22 +5,14 @@ import org.faya.sensei.payloads.UserPrincipal;
 
 import java.util.Optional;
 
-public interface IAuthService {
-    /**
-     * Register a user into repository and retrieve the jwt token.
-     *
-     * @param userDTO The user data transfer object.
-     * @return The nullable authentication token.
-     */
-    Optional<String> register(final UserDTO userDTO);
-
+public interface IAuthService extends IService<UserDTO> {
     /**
      * Authenticates a user from repository and retrieve the jwt token.
      *
      * @param userDTO The user data transfer object.
      * @return The nullable authentication token.
      */
-    Optional<String> login(final UserDTO userDTO);
+    Optional<UserDTO> login(final UserDTO userDTO);
 
     /**
      * Generate token Based on user info.
