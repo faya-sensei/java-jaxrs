@@ -1,7 +1,6 @@
 package org.faya.sensei.resources.endpoints;
 
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.ws.rs.POST;

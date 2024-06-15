@@ -7,6 +7,7 @@ import org.faya.sensei.payloads.UserDTO;
 import org.faya.sensei.payloads.UserPrincipal;
 import org.faya.sensei.repositories.IRepository;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class AuthService implements IAuthService {
@@ -23,6 +24,16 @@ public class AuthService implements IAuthService {
     }
 
     @Override
+    public Optional<String> generateToken(int id, Map<String, String> payload) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<UserPrincipal> resolveToken(String token) {
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<UserDTO> create(UserDTO dto) {
         return Optional.empty();
     }
@@ -35,15 +46,5 @@ public class AuthService implements IAuthService {
     @Override
     public boolean remove(int id) {
         return false;
-    }
-
-    @Override
-    public Optional<String> generateToken(final String id, final String name) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<UserPrincipal> parseToken(String token) {
-        return Optional.empty();
     }
 }

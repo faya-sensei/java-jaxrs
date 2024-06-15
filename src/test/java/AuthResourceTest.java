@@ -111,12 +111,15 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testUserRepository_Get() {
-                Optional<UserEntity> user = userRepository.get(targetId);
+                Optional<UserEntity> result = userRepository.get(targetId);
 
-                assertTrue(user.isPresent());
-                assertTrue(user.get().getId() > 0);
-                assertEquals(userEntity.getName(), user.get().getName());
-                assertEquals(userEntity.getRole(), user.get().getRole());
+                assertTrue(result.isPresent());
+
+                UserEntityWrapper userEntityWrapper = new UserEntityWrapper(result.get());
+
+                assertTrue(userEntityWrapper.getId() > 0);
+                assertEquals(userEntity.getName(), userEntityWrapper.getName());
+                assertEquals(userEntity.getRole(), userEntityWrapper.getRole());
             }
         }
 
