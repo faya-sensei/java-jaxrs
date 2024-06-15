@@ -102,7 +102,7 @@ public class AuthResourceTest {
 
             @Test
             @Order(1)
-            public void testUserRepository_Post() {
+            public void testPost() {
                 targetId = userRepository.post(userEntity.userEntity());
 
                 assertTrue(targetId > 0);
@@ -110,7 +110,7 @@ public class AuthResourceTest {
 
             @Test
             @Order(2)
-            public void testUserRepository_Get() {
+            public void testGet() {
                 Optional<UserEntity> result = userRepository.get(targetId);
 
                 assertTrue(result.isPresent());
@@ -137,7 +137,7 @@ public class AuthResourceTest {
             private IAuthService authService;
 
             @BeforeEach
-            public void setup() throws Exception {
+            public void prepare() throws Exception {
                 Reflections reflections = new Reflections("org.faya.sensei.services");
                 Set<Class<? extends IAuthService>> classes = reflections.getSubTypesOf(IAuthService.class);
 
@@ -155,7 +155,7 @@ public class AuthResourceTest {
 
             @Test
             @Order(1)
-            public void testAuthService_Register() {
+            public void testRegister() {
                 when(userRepository.post(any(UserEntity.class))).then(invocation -> {
                     UserEntityWrapper userEntityWrapper = new UserEntityWrapper(invocation.getArgument(0));
                     userEntityWrapper.setId(1);
@@ -171,7 +171,7 @@ public class AuthResourceTest {
 
             @Test
             @Order(2)
-            public void testAuthService_Login() {
+            public void testLogin() {
                 when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity));
 
                 Optional<UserDTO> user = authService.login(userDTO.userDTO());
@@ -182,7 +182,7 @@ public class AuthResourceTest {
 
             @Test
             @Order(3)
-            public void testAuthService_ResolveToken() {
+            public void testResolveToken() {
                 Optional<String> token = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
 
                 assertTrue(token.isPresent());

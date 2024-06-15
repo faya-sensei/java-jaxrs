@@ -1,3 +1,3 @@
 package org.faya.sensei.resources.endpoints;
 
-public class AuthResource { }
+public class TaskResource { }
