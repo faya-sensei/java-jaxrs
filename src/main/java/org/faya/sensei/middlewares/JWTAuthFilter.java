@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
 import org.faya.sensei.payloads.UserPrincipal;
-import org.faya.sensei.services.AuthService;
+import org.faya.sensei.services.IAuthService;
 
 import java.security.Principal;
 import java.util.Optional;
@@ -22,7 +22,7 @@ import java.util.Optional;
 public class JWTAuthFilter implements ContainerRequestFilter {
 
     @Inject
-    private AuthService authService;
+    private IAuthService authService;
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
