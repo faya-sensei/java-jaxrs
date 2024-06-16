@@ -41,13 +41,13 @@ public class ServerFactory {
             }
 
             private <T> void bindImplementations(String basePackage, Class<T> interfaceClass) {
-                Reflections reflections = new Reflections(basePackage);
-                Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
+                final Reflections reflections = new Reflections(basePackage);
+                final Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
                         .filter(cls -> !Modifier.isAbstract(cls.getModifiers()))
                         .collect(Collectors.toSet());
 
                 for (Class<? extends T> implementationClass : implementations) {
-                    Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
+                    final Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
                     if (implementationInterface != null) {
                         bind(implementationClass).to(implementationInterface).in(Singleton.class);
                     } else {
@@ -67,7 +67,7 @@ public class ServerFactory {
             }
         });
 
-        SeBootstrap.Configuration configuration = SeBootstrap.Configuration.builder().port(0).build();
+        final SeBootstrap.Configuration configuration = SeBootstrap.Configuration.builder().port(0).build();
 
         return SeBootstrap.start(resourceConfig, configuration).toCompletableFuture().join();
     }

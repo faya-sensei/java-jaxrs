@@ -33,7 +33,7 @@ public class HeartBeatResourceTest {
 
     @Test
     public void testAnnotations() {
-        Optional<Method> getMethod = Arrays.stream(HeartBeatResource.class.getDeclaredMethods())
+        final Optional<Method> getMethod = Arrays.stream(HeartBeatResource.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(GET.class))
                 .findFirst();
 
@@ -58,18 +58,18 @@ public class HeartBeatResourceTest {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        JsonObject jsonObject = jsonReader.readObject();
+                        final JsonObject jsonObject = jsonReader.readObject();
 
                         assertEquals("alive", jsonObject.getJsonString("status").getString());
 
-                        DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
+                        final DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
                                 .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME) // 2011-12-03T10:15:30
                                 .appendOptional(DateTimeFormatter.ISO_DATE_TIME) // 2011-12-03T10:15:30+01:00
                                 .appendOptional(DateTimeFormatter.ISO_INSTANT)  // 2011-12-03T10:15:30Z
                                 .toFormatter();
 
-                        LocalDateTime time = LocalDateTime.parse(jsonObject.getJsonString("time").getString(), dateTimeFormatter);
-                        Duration duration = Duration.between(time, LocalDateTime.now());
+                        final LocalDateTime time = LocalDateTime.parse(jsonObject.getJsonString("time").getString(), dateTimeFormatter);
+                        final Duration duration = Duration.between(time, LocalDateTime.now());
 
                         assertTrue(duration.compareTo(Duration.ofSeconds(10L)) <= 0);
                     }

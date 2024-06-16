@@ -72,7 +72,7 @@ public class App {
         }
 
         if ((operations & START_DATABASE_MIGRATION) == START_DATABASE_MIGRATION) {
-            boolean result = startMigration("migration.sql");
+            final boolean result = startMigration("migration.sql");
             LOGGER.log(Level.INFO, "Database migrations executed {0}.", result ? "success" : "failed");
         }
 
@@ -121,13 +121,13 @@ public class App {
             }
 
             private <T> void bindImplementations(String basePackage, Class<T> interfaceClass) {
-                Reflections reflections = new Reflections(basePackage);
-                Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
+                final Reflections reflections = new Reflections(basePackage);
+                final Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
                         .filter(cls -> !Modifier.isAbstract(cls.getModifiers()))
                         .collect(Collectors.toSet());
 
                 for (Class<? extends T> implementationClass : implementations) {
-                    Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
+                    final Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
                     if (implementationInterface != null) {
                         bind(implementationClass).to(implementationInterface).in(Singleton.class);
                     } else {
@@ -147,9 +147,9 @@ public class App {
             }
         });
 
-        SeBootstrap.Configuration configuration = SeBootstrap.Configuration.builder()
+        final SeBootstrap.Configuration configuration = SeBootstrap.Configuration.builder()
                 .from((name, type) -> {
-                    String value = properties.entrySet().stream()
+                    final String value = properties.entrySet().stream()
                             .filter(entry -> entry.getKey().equalsIgnoreCase(name.substring(name.lastIndexOf('.') + 1)))
                             .map(Map.Entry::getValue)
                             .findFirst()
@@ -163,7 +163,7 @@ public class App {
                 })
                 .build();
 
-        CompletionStage<SeBootstrap.Instance> handler = SeBootstrap.start(resourceConfig, configuration);
+        final CompletionStage<SeBootstrap.Instance> handler = SeBootstrap.start(resourceConfig, configuration);
 
         return handler.toCompletableFuture().join();
     }

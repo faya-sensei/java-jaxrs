@@ -47,7 +47,7 @@ public class AuthResourceTest {
 
     @Test
     public void testAnnotations() {
-        long postMethod = Arrays.stream(AuthResource.class.getDeclaredMethods())
+        final long postMethod = Arrays.stream(AuthResource.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(POST.class))
                 .count();
 
@@ -64,19 +64,19 @@ public class AuthResourceTest {
 
             private static final EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("java-jaxrs-database");
 
-            private static final UserEntityWrapper userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
-
             private static IRepository<UserEntity> userRepository;
+
+            private static UserEntityWrapper userEntity;
 
             private static int targetId = -1;
 
             @BeforeAll
             @SuppressWarnings("unchecked")
             public static void setUp() throws Exception {
-                Reflections reflections = new Reflections("org.faya.sensei.repositories");
-                Set<Class<? extends IRepository>> classes = reflections.getSubTypesOf(IRepository.class);
+                final Reflections reflections = new Reflections("org.faya.sensei.repositories");
+                final Set<Class<? extends IRepository>> classes = reflections.getSubTypesOf(IRepository.class);
 
-                Class<? extends IRepository> userRepositoryClass = classes.stream()
+                final Class<? extends IRepository> userRepositoryClass = classes.stream()
                         .filter(cls -> {
                             Type[] genericInterfaces = cls.getGenericInterfaces();
                             for (Type genericInterface : genericInterfaces) {
@@ -94,8 +94,9 @@ public class AuthResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<UserEntity>"));
 
                 userRepository = userRepositoryClass.getDeclaredConstructor().newInstance();
+                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
 
-                Field userRepositoryField = userRepositoryClass.getDeclaredField("entityManager");
+                final Field userRepositoryField = userRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
                 userRepositoryField.set(userRepository, entityManagerFactory.createEntityManager());
             }
@@ -110,16 +111,16 @@ public class AuthResourceTest {
 
             @Test
             @Order(2)
-            public void testGet() {
-                Optional<UserEntity> result = userRepository.get(targetId);
+            public void testGetById() {
+                final Optional<UserEntity> result = userRepository.get(targetId);
 
                 assertTrue(result.isPresent());
 
-                UserEntityWrapper userEntityWrapper = new UserEntityWrapper(result.get());
+                final UserEntityWrapper resultWrapper = new UserEntityWrapper(result.get());
 
-                assertTrue(userEntityWrapper.getId() > 0);
-                assertEquals(userEntity.getName(), userEntityWrapper.getName());
-                assertEquals(userEntity.getRole(), userEntityWrapper.getRole());
+                assertTrue(resultWrapper.getId() > 0);
+                assertEquals(userEntity.getName(), resultWrapper.getName());
+                assertEquals(userEntity.getRole(), resultWrapper.getRole());
             }
         }
 
@@ -127,9 +128,9 @@ public class AuthResourceTest {
         @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
         public class AuthServiceTest {
 
-            private static final UserDTOWrapper userDTO = UserFactory.createUserDTO("user", "password");
+            private static UserDTOWrapper userDTO;
 
-            private static UserEntity userEntity;
+            private static UserEntityWrapper userEntity;
 
             @Mock
             private IRepository<UserEntity> userRepository;
@@ -138,17 +139,18 @@ public class AuthResourceTest {
 
             @BeforeEach
             public void prepare() throws Exception {
-                Reflections reflections = new Reflections("org.faya.sensei.services");
-                Set<Class<? extends IAuthService>> classes = reflections.getSubTypesOf(IAuthService.class);
+                final Reflections reflections = new Reflections("org.faya.sensei.services");
+                final Set<Class<? extends IAuthService>> classes = reflections.getSubTypesOf(IAuthService.class);
 
-                Class<? extends IAuthService> authServiceClass = classes.stream()
+                final Class<? extends IAuthService> authServiceClass = classes.stream()
                         .findFirst()
                         .orElseThrow(() ->
                                 new ClassNotFoundException("No implementation found for IAuthService"));
 
                 authService = authServiceClass.getDeclaredConstructor().newInstance();
+                userDTO = UserFactory.createUserDTO("user", "password");
 
-                Field userRepositoryField = authServiceClass.getDeclaredField("userRepository");
+                final Field userRepositoryField = authServiceClass.getDeclaredField("userRepository");
                 userRepositoryField.setAccessible(true);
                 userRepositoryField.set(authService, userRepository);
             }
@@ -157,13 +159,12 @@ public class AuthResourceTest {
             @Order(1)
             public void testRegister() {
                 when(userRepository.post(any(UserEntity.class))).then(invocation -> {
-                    UserEntityWrapper userEntityWrapper = new UserEntityWrapper(invocation.getArgument(0));
-                    userEntityWrapper.setId(1);
-                    userEntity = userEntityWrapper.userEntity();
+                    userEntity = new UserEntityWrapper(invocation.getArgument(0));
+                    userEntity.setId(1);
                     return 1;
                 });
 
-                Optional<UserDTO> user = authService.create(userDTO.userDTO());
+                final Optional<UserDTO> user = authService.create(userDTO.userDTO());
 
                 verify(userRepository, times(1)).post(any(UserEntity.class));
                 assertTrue(user.isPresent());
@@ -172,9 +173,9 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testLogin() {
-                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity));
+                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity.userEntity()));
 
-                Optional<UserDTO> user = authService.login(userDTO.userDTO());
+                final Optional<UserDTO> user = authService.login(userDTO.userDTO());
 
                 verify(userRepository, times(1)).get(userDTO.getName());
                 assertTrue(user.isPresent());
@@ -183,13 +184,13 @@ public class AuthResourceTest {
             @Test
             @Order(3)
             public void testResolveToken() {
-                Optional<String> token = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
+                final Optional<String> token = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
 
                 assertTrue(token.isPresent());
 
-                Optional<UserPrincipal> userPrincipal = authService.resolveToken(token.get());
+                final Optional<UserPrincipal> user = authService.resolveToken(token.get());
 
-                assertTrue(userPrincipal.isPresent());
+                assertTrue(user.isPresent());
             }
         }
     }
@@ -219,11 +220,11 @@ public class AuthResourceTest {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        JsonObject jsonObject = jsonReader.readObject();
+                        final JsonObject jsonObject = jsonReader.readObject();
 
                         assertTrue(jsonObject.getInt("id") > 0);
-                        assertEquals(registerUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
                         assertFalse(jsonObject.getJsonString("token").getString().isBlank());
+                        assertEquals(registerUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
                     }
                 }
             }
@@ -244,11 +245,11 @@ public class AuthResourceTest {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        JsonObject jsonObject = jsonReader.readObject();
+                        final JsonObject jsonObject = jsonReader.readObject();
 
                         assertTrue(jsonObject.getInt("id") > 0);
-                        assertEquals(loginUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
                         assertFalse(jsonObject.getJsonString("token").getString().isBlank());
+                        assertEquals(loginUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
                     }
                 }
             }

@@ -19,7 +19,7 @@ public class AuthService implements IAuthService {
     private IRepository<UserEntity> userRepository;
 
     @Override
-    public Optional<UserDTO> login(final UserDTO userDTO) {
+    public Optional<UserDTO> login(final UserDTO dto) {
         return Optional.empty();
     }
 
