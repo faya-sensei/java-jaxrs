@@ -6,15 +6,17 @@ import org.faya.sensei.entities.StatusEntity;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public record StatusEntityWrapper(StatusEntity statusEntity) {
+public record StatusEntityWrapper(StatusEntity entity) {
 
     private static final VarHandle idHandle;
+
     private static final VarHandle nameHandle;
+
     private static final VarHandle projectHandle;
 
     static {
         try {
-            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(StatusEntity.class, MethodHandles.lookup());
+            final MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(StatusEntity.class, MethodHandles.lookup());
             idHandle = lookup.findVarHandle(StatusEntity.class, "id", Integer.class);
             nameHandle = lookup.findVarHandle(StatusEntity.class, "name", String.class);
             projectHandle = lookup.findVarHandle(StatusEntity.class, "project", ProjectEntity.class);
@@ -24,26 +26,26 @@ public record StatusEntityWrapper(StatusEntity statusEntity) {
     }
 
     public Integer getId() {
-        return (Integer) idHandle.get(statusEntity);
+        return (Integer) idHandle.get(entity);
     }
 
     public void setId(Integer id) {
-        idHandle.set(statusEntity, id);
+        idHandle.set(entity, id);
     }
 
     public String getName() {
-        return (String) nameHandle.get(statusEntity);
+        return (String) nameHandle.get(entity);
     }
 
     public void setName(String name) {
-        nameHandle.set(statusEntity, name);
+        nameHandle.set(entity, name);
     }
 
     public ProjectEntityWrapper getProject() {
-        return new ProjectEntityWrapper((ProjectEntity) projectHandle.get(statusEntity));
+        return new ProjectEntityWrapper((ProjectEntity) projectHandle.get(entity));
     }
 
     public void setProject(ProjectEntity project) {
-        projectHandle.set(statusEntity, project);
+        projectHandle.set(entity, project);
     }
 }

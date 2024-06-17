@@ -21,7 +21,7 @@ public interface IService<T> {
      * @param key The unique key of the item.
      * @return The nullable item.
      */
-    default Optional<T> get(String key)  {
+    default Optional<T> get(final String key)  {
         return Optional.empty();
     }
 
@@ -32,7 +32,7 @@ public interface IService<T> {
      * @param value The search value of the foreign item.
      * @return A collection of items.
      */
-    default Collection<T> getBy(String key, String value)  {
+    default Collection<T> getBy(final String key, final String value)  {
         return List.of();
     }
 

@@ -8,15 +8,17 @@ import java.lang.invoke.VarHandle;
 import java.util.List;
 
 @SuppressWarnings("unchecked")
-public record ProjectEntityWrapper(ProjectEntity projectEntity) {
+public record ProjectEntityWrapper(ProjectEntity entity) {
 
     private static final VarHandle idHandle;
+
     private static final VarHandle nameHandle;
+
     private static final VarHandle usersHandle;
 
     static {
         try {
-            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ProjectEntity.class, MethodHandles.lookup());
+            final MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ProjectEntity.class, MethodHandles.lookup());
             idHandle = lookup.findVarHandle(ProjectEntity.class, "id", Integer.class);
             nameHandle = lookup.findVarHandle(ProjectEntity.class, "name", String.class);
             usersHandle = lookup.findVarHandle(ProjectEntity.class, "users", List.class);
@@ -26,26 +28,26 @@ public record ProjectEntityWrapper(ProjectEntity projectEntity) {
     }
 
     public Integer getId() {
-        return (Integer) idHandle.get(projectEntity);
+        return (Integer) idHandle.get(entity);
     }
 
     public void setId(Integer id) {
-        idHandle.set(projectEntity, id);
+        idHandle.set(entity, id);
     }
 
     public String getName() {
-        return (String) nameHandle.get(projectEntity);
+        return (String) nameHandle.get(entity);
     }
 
     public void setName(String name) {
-        nameHandle.set(projectEntity, name);
+        nameHandle.set(entity, name);
     }
 
     public List<UserEntity> getUsers() {
-        return (List<UserEntity>) usersHandle.get(projectEntity);
+        return (List<UserEntity>) usersHandle.get(entity);
     }
 
     public void setUsers(List<UserEntity> users) {
-        usersHandle.set(projectEntity, users);
+        usersHandle.set(entity, users);
     }
 }

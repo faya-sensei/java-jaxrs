@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class ServerFactory {
 
-    public static SeBootstrap.Instance createServer(EntityManagerFactory entityManagerFactory) {
+    public static SeBootstrap.Instance createServer(final EntityManagerFactory entityManagerFactory) {
         ResourceConfig resourceConfig = ResourceConfig.forApplication(new JaxRsApplication());
         resourceConfig.register(JWTAuthFilter.class);
         resourceConfig.register(new AbstractBinder() {
@@ -40,13 +40,13 @@ public class ServerFactory {
                 bindImplementations("org.faya.sensei.services", IService.class);
             }
 
-            private <T> void bindImplementations(String basePackage, Class<T> interfaceClass) {
+            private <T> void bindImplementations(final String basePackage, final Class<T> interfaceClass) {
                 final Reflections reflections = new Reflections(basePackage);
                 final Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
                         .filter(cls -> !Modifier.isAbstract(cls.getModifiers()))
                         .collect(Collectors.toSet());
 
-                for (Class<? extends T> implementationClass : implementations) {
+                for (final Class<? extends T> implementationClass : implementations) {
                     final Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
                     if (implementationInterface != null) {
                         bind(implementationClass).to(implementationInterface).in(Singleton.class);
@@ -56,8 +56,8 @@ public class ServerFactory {
                 }
             }
 
-            private <T> Type getGenericInterface(Class<?> clazz, Class<T> interfaceClass) {
-                for (Type type : clazz.getGenericInterfaces()) {
+            private <T> Type getGenericInterface(final Class<?> clazz, final Class<T> interfaceClass) {
+                for (final Type type : clazz.getGenericInterfaces()) {
                     if (type instanceof ParameterizedType paramType &&
                             interfaceClass.equals(paramType.getRawType()))
                         return type;

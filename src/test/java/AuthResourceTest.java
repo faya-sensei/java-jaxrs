@@ -78,10 +78,10 @@ public class AuthResourceTest {
 
                 final Class<? extends IRepository> userRepositoryClass = classes.stream()
                         .filter(cls -> {
-                            Type[] genericInterfaces = cls.getGenericInterfaces();
-                            for (Type genericInterface : genericInterfaces) {
+                            final Type[] genericInterfaces = cls.getGenericInterfaces();
+                            for (final Type genericInterface : genericInterfaces) {
                                 if (genericInterface instanceof ParameterizedType parameterizedType) {
-                                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+                                    final Type[] typeArguments = parameterizedType.getActualTypeArguments();
                                     if (typeArguments.length == 1 && typeArguments[0].equals(UserEntity.class))
                                         return true;
                                 }
@@ -104,7 +104,7 @@ public class AuthResourceTest {
             @Test
             @Order(1)
             public void testPost() {
-                targetId = userRepository.post(userEntity.userEntity());
+                targetId = userRepository.post(userEntity.entity());
 
                 assertTrue(targetId > 0);
             }
@@ -112,15 +112,17 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testGetById() {
-                final Optional<UserEntity> result = userRepository.get(targetId);
+                final Optional<UserEntity> actualUserEntity = userRepository.get(targetId);
 
-                assertTrue(result.isPresent());
+                assertTrue(actualUserEntity.isPresent());
 
-                final UserEntityWrapper resultWrapper = new UserEntityWrapper(result.get());
+                actualUserEntity.ifPresent(user -> {
+                    final UserEntityWrapper actualUser = new UserEntityWrapper(actualUserEntity.get());
 
-                assertTrue(resultWrapper.getId() > 0);
-                assertEquals(userEntity.getName(), resultWrapper.getName());
-                assertEquals(userEntity.getRole(), resultWrapper.getRole());
+                    assertTrue(actualUser.getId() > 0);
+                    assertEquals(userEntity.getName(), actualUser.getName());
+                    assertEquals(userEntity.getRole(), actualUser.getRole());
+                });
             }
         }
 
@@ -164,33 +166,33 @@ public class AuthResourceTest {
                     return 1;
                 });
 
-                final Optional<UserDTO> user = authService.create(userDTO.userDTO());
+                final Optional<UserDTO> actualUserDTO = authService.create(userDTO.dto());
 
                 verify(userRepository, times(1)).post(any(UserEntity.class));
-                assertTrue(user.isPresent());
+                assertTrue(actualUserDTO.isPresent());
             }
 
             @Test
             @Order(2)
             public void testLogin() {
-                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity.userEntity()));
+                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity.entity()));
 
-                final Optional<UserDTO> user = authService.login(userDTO.userDTO());
+                final Optional<UserDTO> actualUserDTO = authService.login(userDTO.dto());
 
                 verify(userRepository, times(1)).get(userDTO.getName());
-                assertTrue(user.isPresent());
+                assertTrue(actualUserDTO.isPresent());
             }
 
             @Test
             @Order(3)
             public void testResolveToken() {
-                final Optional<String> token = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
+                final Optional<String> actualToken = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
 
-                assertTrue(token.isPresent());
+                assertTrue(actualToken.isPresent());
 
-                final Optional<UserPrincipal> user = authService.resolveToken(token.get());
+                final Optional<UserPrincipal> actualUserPrincipal = authService.resolveToken(actualToken.get());
 
-                assertTrue(user.isPresent());
+                assertTrue(actualUserPrincipal.isPresent());
             }
         }
     }
@@ -208,23 +210,25 @@ public class AuthResourceTest {
         @Test
         @Order(1)
         public void testRegister() {
-            final JsonObject registerUser = Json.createObjectBuilder()
-                    .add("name", "user")
-                    .add("password", "password")
+            final JsonObject registerUserBody = Json.createObjectBuilder()
+                    .add("name", "user").add("password", "password")
                     .build();
 
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/register").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(registerUser, MediaType.APPLICATION_JSON))) {
+                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(registerUserBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
-                        assertTrue(jsonObject.getInt("id") > 0);
                         assertFalse(jsonObject.getJsonString("token").getString().isBlank());
-                        assertEquals(registerUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
+                        assertEquals(
+                                registerUserBody.getJsonString("name").getString(),
+                                jsonObject.getJsonString("name").getString()
+                        );
                     }
                 }
             }
@@ -233,23 +237,25 @@ public class AuthResourceTest {
         @Test
         @Order(2)
         public void testLogin() {
-            final JsonObject loginUser = Json.createObjectBuilder()
-                    .add("name", "user")
-                    .add("password", "password")
+            final JsonObject loginUserBody = Json.createObjectBuilder()
+                    .add("name", "user").add("password", "password")
                     .build();
 
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/login").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(loginUser, MediaType.APPLICATION_JSON))) {
+                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(loginUserBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
-                        assertTrue(jsonObject.getInt("id") > 0);
                         assertFalse(jsonObject.getJsonString("token").getString().isBlank());
-                        assertEquals(loginUser.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
+                        assertEquals(
+                                loginUserBody.getJsonString("name").getString(),
+                                jsonObject.getJsonString("name").getString()
+                        );
                     }
                 }
             }

@@ -8,9 +8,9 @@ import wrappers.ProjectEntityWrapper;
 
 import java.util.List;
 
-public class ProjectFactory {
+public final class ProjectFactory {
 
-    public static ProjectDTOWrapper createProjectDTO(String name) {
+    public static ProjectDTOWrapper createProjectDTO(final String name) {
         ProjectDTOWrapper wrapper = new ProjectDTOWrapper(new ProjectDTO());
 
         wrapper.setName(name);
@@ -18,7 +18,7 @@ public class ProjectFactory {
         return wrapper;
     }
 
-    public static ProjectEntityWrapper createProjectEntity(String name, List<UserEntity> users) {
+    public static ProjectEntityWrapper createProjectEntity(final String name, final List<UserEntity> users) {
         ProjectEntityWrapper wrapper = new ProjectEntityWrapper(new ProjectEntity());
 
         wrapper.setName(name);

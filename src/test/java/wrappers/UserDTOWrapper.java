@@ -5,7 +5,7 @@ import org.faya.sensei.payloads.UserDTO;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public record UserDTOWrapper(UserDTO userDTO) {
+public record UserDTOWrapper(UserDTO dto) {
 
     private static final VarHandle idHandle;
 
@@ -19,7 +19,7 @@ public record UserDTOWrapper(UserDTO userDTO) {
 
     static {
         try {
-            MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(UserDTO.class, MethodHandles.lookup());
+            final MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(UserDTO.class, MethodHandles.lookup());
             idHandle = lookup.findVarHandle(UserDTO.class, "id", Integer.class);
             nameHandle = lookup.findVarHandle(UserDTO.class, "name", String.class);
             passwordHandle = lookup.findVarHandle(UserDTO.class, "password", String.class);
@@ -31,42 +31,42 @@ public record UserDTOWrapper(UserDTO userDTO) {
     }
 
     public Integer getId() {
-        return (Integer) idHandle.get(userDTO);
+        return (Integer) idHandle.get(dto);
     }
 
     public void setId(Integer id) {
-        idHandle.set(userDTO, id);
+        idHandle.set(dto, id);
     }
 
     public String getName() {
-        return (String) nameHandle.get(userDTO);
+        return (String) nameHandle.get(dto);
     }
 
     public void setName(String name) {
-        nameHandle.set(userDTO, name);
+        nameHandle.set(dto, name);
     }
 
     public String getPassword() {
-        return (String) passwordHandle.get(userDTO);
+        return (String) passwordHandle.get(dto);
     }
 
     public void setPassword(String password) {
-        passwordHandle.set(userDTO, password);
+        passwordHandle.set(dto, password);
     }
 
     public String getRole() {
-        return (String) roleHandle.get(userDTO);
+        return (String) roleHandle.get(dto);
     }
 
     public void setRole(String role) {
-        roleHandle.set(userDTO, role);
+        roleHandle.set(dto, role);
     }
 
     public String getToken() {
-        return (String) tokenHandle.get(userDTO);
+        return (String) tokenHandle.get(dto);
     }
 
     public void setToken(String token) {
-        tokenHandle.set(userDTO, token);
+        tokenHandle.set(dto, token);
     }
 }

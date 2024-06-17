@@ -10,10 +10,10 @@ public interface IAuthService extends IService<UserDTO> {
     /**
      * Authenticates a user from repository and retrieve the jwt token.
      *
-     * @param userDTO The user data transfer object.
+     * @param dto The user data transfer object.
      * @return The nullable authentication token.
      */
-    Optional<UserDTO> login(final UserDTO userDTO);
+    Optional<UserDTO> login(final UserDTO dto);
 
     /**
      * Generate token Based on user info.

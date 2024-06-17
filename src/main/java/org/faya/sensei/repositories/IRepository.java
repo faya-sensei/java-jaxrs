@@ -20,7 +20,7 @@ public interface IRepository<T> {
      * @param id The primary key of the item.
      * @return The item.
      */
-    default Optional<T> get(int id) {
+    default Optional<T> get(final int id) {
         return Optional.empty();
     }
 
@@ -30,7 +30,7 @@ public interface IRepository<T> {
      * @param key The unique key of the item.
      * @return The item.
      */
-    default Optional<T> get(String key)  {
+    default Optional<T> get(final String key)  {
         return Optional.empty();
     }
 
@@ -41,7 +41,7 @@ public interface IRepository<T> {
      * @param value The query value of the foreign key.
      * @return The collection of items.
      */
-    default Collection<T> getBy(String key, String value)  {
+    default Collection<T> getBy(final String key, final String value)  {
         return List.of();
     }
 
@@ -60,7 +60,7 @@ public interface IRepository<T> {
      * @param item The updated item.
      * @return The updated item.
      */
-    Optional<T> put(int id, T item);
+    Optional<T> put(final int id, T item);
 
     /**
      * Remove an item from storage according to id.
@@ -68,5 +68,5 @@ public interface IRepository<T> {
      * @param id The id of the item.
      * @return The removed item.
      */
-    Optional<T> delete(int id);
+    Optional<T> delete(final int id);
 }

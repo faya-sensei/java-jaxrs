@@ -12,8 +12,14 @@ import java.time.LocalDateTime;
 
 public class TaskFactory {
 
-    public static TaskDTOWrapper createTaskDTO(String title, String description, LocalDateTime endDate,
-                                               String status, Integer projectId, Integer assignerId) {
+    public static TaskDTOWrapper createTaskDTO(
+            final String title,
+            final String description,
+            final LocalDateTime endDate,
+            final String status,
+            final Integer projectId,
+            final Integer assignerId
+    ) {
         TaskDTOWrapper wrapper = new TaskDTOWrapper(new TaskDTO());
 
         wrapper.setTitle(title);
@@ -27,18 +33,23 @@ public class TaskFactory {
         return wrapper;
     }
 
-    public static TaskEntityWrapper createTaskEntity(String title, String description, LocalDateTime endDate,
-                                                     StatusEntity statusEntity, ProjectEntity projectEntity,
-                                                     UserEntity assignerEntity) {
+    public static TaskEntityWrapper createTaskEntity(
+            final String title,
+            final String description,
+            final LocalDateTime endDate,
+            final StatusEntity status,
+            final ProjectEntity project,
+            final UserEntity assigner
+    ) {
         TaskEntityWrapper wrapper = new TaskEntityWrapper(new TaskEntity());
 
         wrapper.setTitle(title);
         wrapper.setDescription(description);
         wrapper.setStartDate(LocalDateTime.now());
         wrapper.setEndDate(endDate);
-        wrapper.setStatus(statusEntity);
-        wrapper.setProject(projectEntity);
-        wrapper.setAssigner(assignerEntity);
+        wrapper.setStatus(status);
+        wrapper.setProject(project);
+        wrapper.setAssigner(assigner);
 
         return wrapper;
     }

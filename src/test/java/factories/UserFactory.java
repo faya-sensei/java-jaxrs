@@ -8,7 +8,7 @@ import wrappers.UserEntityWrapper;
 
 public class UserFactory {
 
-    public static UserDTOWrapper createUserDTO(String name, String password) {
+    public static UserDTOWrapper createUserDTO(final String name, final String password) {
         UserDTOWrapper wrapper = new UserDTOWrapper(new UserDTO());
 
         wrapper.setName(name);
@@ -17,7 +17,7 @@ public class UserFactory {
         return wrapper;
     }
 
-    public static UserEntityWrapper createUserEntity(String name, String password, UserRole role) {
+    public static UserEntityWrapper createUserEntity(final String name, final String password, final UserRole role) {
         UserEntityWrapper wrapper = new UserEntityWrapper(new UserEntity());
 
         wrapper.setName(name);

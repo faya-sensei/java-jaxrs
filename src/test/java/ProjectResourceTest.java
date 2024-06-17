@@ -35,6 +35,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,10 +68,10 @@ public class ProjectResourceTest {
 
                 final Class<? extends IRepository> projectRepositoryClass = classes.stream()
                         .filter(cls -> {
-                            Type[] genericInterfaces = cls.getGenericInterfaces();
-                            for (Type genericInterface : genericInterfaces) {
+                            final Type[] genericInterfaces = cls.getGenericInterfaces();
+                            for (final Type genericInterface : genericInterfaces) {
                                 if (genericInterface instanceof ParameterizedType parameterizedType) {
-                                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+                                    final Type[] typeArguments = parameterizedType.getActualTypeArguments();
                                     if (typeArguments.length == 1 && typeArguments[0].equals(ProjectEntity.class))
                                         return true;
                                 }
@@ -83,8 +84,10 @@ public class ProjectResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<ProjectEntity>"));
 
                 projectRepository = projectRepositoryClass.getDeclaredConstructor().newInstance();
+
                 userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
-                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.userEntity()));
+
+                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity()));
 
                 final Field userRepositoryField = projectRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -94,19 +97,29 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testPost() {
-                targetId = projectRepository.post(projectEntity.projectEntity());
+                targetId = projectRepository.post(projectEntity.entity());
 
                 assertTrue(targetId > 0);
             }
 
             @Test
             @Order(2)
-            public void testGetByUser() {
-                Collection<ProjectEntity> actualProjectEntities = projectRepository.getBy("users.name", "user");
+            public void testGetById() {
+                final Optional<ProjectEntity> actualProject = projectRepository.get(targetId);
 
-                assertFalse(actualProjectEntities.isEmpty());
-                for (ProjectEntity actualProject : actualProjectEntities) {
-                    assertEquals(projectEntity.projectEntity().getName(), actualProject.getName());
+                assertTrue(actualProject.isPresent());
+                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
+            }
+
+            @Test
+            @Order(3)
+            public void testGetByUser() {
+                final Collection<ProjectEntity> actualProjects = projectRepository.getBy("users.name", "user");
+
+                assertFalse(actualProjects.isEmpty());
+
+                for (final ProjectEntity actualProject : actualProjects) {
+                    assertEquals(projectEntity.entity().getName(), actualProject.getName());
                 }
             }
         }
@@ -121,28 +134,24 @@ public class ProjectResourceTest {
 
         private static final URI uri = instance.configuration().baseUri();
 
-        private static UserEntityWrapper userEntityWrapper;
+        private static UserEntityWrapper userEntity;
 
-        private static List<ProjectEntityWrapper> projectEntityWrappers;
+        private static List<ProjectEntityWrapper> projectEntities;
 
-        private static List<StatusEntityWrapper> StatusEntityWrappers;
+        private static List<StatusEntityWrapper> StatusEntities;
 
-        private static List<TaskEntityWrapper> taskEntityWrappers;
+        private static List<TaskEntityWrapper> taskEntities;
 
         private static String cacheToken;
 
         @BeforeAll
         public static void setUp() {
-            final JsonObject registerUser = Json.createObjectBuilder()
-                    .add("name", "user")
-                    .add("password", "password")
-                    .build();
+            final JsonObject registerUser = Json.createObjectBuilder().add("name", "user").add("password", "password").build();
 
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/register").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(registerUser, MediaType.APPLICATION_JSON))) {
+                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(registerUser, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
@@ -155,40 +164,40 @@ public class ProjectResourceTest {
                         try {
                             transaction.begin();
 
-                            userEntityWrapper = new UserEntityWrapper(entityManager.find(UserEntity.class, jsonObject.getInt("id")));
+                            userEntity = new UserEntityWrapper(entityManager.find(UserEntity.class, jsonObject.getInt("id")));
 
-                            projectEntityWrappers = List.of(
-                                    ProjectFactory.createProjectEntity("Project 1", List.of(userEntityWrapper.userEntity()))
+                            projectEntities = List.of(
+                                    ProjectFactory.createProjectEntity("Project 1", List.of(userEntity.entity()))
                             );
 
-                            StatusEntityWrappers = List.of(
-                                    StatusFactory.createStatusEntity("Todo", projectEntityWrappers.getFirst().projectEntity()),
-                                    StatusFactory.createStatusEntity("Done", projectEntityWrappers.getFirst().projectEntity())
+                            StatusEntities = List.of(
+                                    StatusFactory.createStatusEntity("Todo", projectEntities.getFirst().entity()),
+                                    StatusFactory.createStatusEntity("Done", projectEntities.getFirst().entity())
                             );
 
-                            taskEntityWrappers = List.of(
+                            taskEntities = List.of(
                                     TaskFactory.createTaskEntity(
                                             "Test task 1",
                                             "Task 1 Test Description.",
                                             LocalDateTime.now().plusMinutes(10),
-                                            StatusEntityWrappers.getFirst().statusEntity(),
-                                            projectEntityWrappers.getFirst().projectEntity(),
-                                            userEntityWrapper.userEntity()
+                                            StatusEntities.getFirst().entity(),
+                                            projectEntities.getFirst().entity(),
+                                            userEntity.entity()
                                     ),
                                     TaskFactory.createTaskEntity(
                                             "Test task 2",
                                             "Task 2 Test Description.",
                                             LocalDateTime.now().plusMinutes(20),
-                                            StatusEntityWrappers.getLast().statusEntity(),
-                                            projectEntityWrappers.getFirst().projectEntity(),
-                                            userEntityWrapper.userEntity()
+                                            StatusEntities.getLast().entity(),
+                                            projectEntities.getFirst().entity(),
+                                            userEntity.entity()
                                     )
 
                             );
 
-                            projectEntityWrappers.forEach(project -> entityManager.persist(project.projectEntity()));
-                            StatusEntityWrappers.forEach(status -> entityManager.persist(status.statusEntity()));
-                            taskEntityWrappers.forEach(task -> entityManager.persist(task.taskEntity()));
+                            projectEntities.forEach(project -> entityManager.persist(project.entity()));
+                            StatusEntities.forEach(status -> entityManager.persist(status.entity()));
+                            taskEntities.forEach(task -> entityManager.persist(task.entity()));
 
                             transaction.commit();
                         } catch (Exception e) {
@@ -218,7 +227,10 @@ public class ProjectResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(creationTask.getJsonString("name").getString(), jsonObject.getJsonString("name").getString());
+                        assertEquals(
+                                creationTask.getJsonString("name").getString(),
+                                jsonObject.getJsonString("name").getString()
+                        );
                     }
                 }
             }
@@ -238,7 +250,10 @@ public class ProjectResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readArray().getFirst().asJsonObject();
 
-                        assertEquals(projectEntityWrappers.getFirst().getName(), jsonObject.getJsonString("name").getString());
+                        assertEquals(
+                                projectEntities.getFirst().getName(),
+                                jsonObject.getJsonString("name").getString()
+                        );
                     }
                 }
             }
@@ -247,10 +262,11 @@ public class ProjectResourceTest {
         @Test
         @Order(3)
         public void testGetProject() {
-            final ProjectEntityWrapper targetProject = projectEntityWrappers.getFirst();
+            final ProjectEntityWrapper targetProjectEntity = projectEntities.getFirst();
 
             try (Client client = ClientBuilder.newClient()) {
-                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project/%d".formatted(targetProject.getId())).build());
+                final String path = "/api/project/%d".formatted(targetProjectEntity.getId());
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path(path).build());
 
                 try (Response response = target.request(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer " + cacheToken)
@@ -260,7 +276,36 @@ public class ProjectResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(projectEntityWrappers.getFirst().getName(), jsonObject.getJsonString("name").getString());
+                        assertEquals(
+                                projectEntities.getFirst().getName(),
+                                jsonObject.getJsonString("name").getString()
+                        );
+
+                        for (int i = 0; i < taskEntities.size(); i++) {
+                            final JsonObject taskJsonObject = jsonObject.getJsonArray("tasks").getJsonObject(i);
+                            final TaskEntityWrapper expectedTask = taskEntities.get(i);
+
+                            assertEquals(
+                                    expectedTask.getTitle(),
+                                    taskJsonObject.getJsonString("title").getString()
+                            );
+                            assertEquals(
+                                    expectedTask.getDescription(),
+                                    taskJsonObject.getJsonString("description").getString()
+                            );
+                            assertEquals(
+                                    expectedTask.getStatus().getName(),
+                                    taskJsonObject.getJsonString("status").getString()
+                            );
+                            assertEquals(
+                                    expectedTask.getProject().getId(),
+                                    taskJsonObject.getInt("projectId")
+                            );
+                            assertEquals(
+                                    expectedTask.getAssigner().getId(),
+                                    taskJsonObject.getInt("assignerId")
+                            );
+                        }
                     }
                 }
             }
