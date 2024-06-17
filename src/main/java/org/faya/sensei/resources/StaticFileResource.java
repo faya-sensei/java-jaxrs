@@ -25,15 +25,15 @@ public class StaticFileResource {
 
     @GET
     @Path("{path:.*}")
-    public Response serveFile(@PathParam("path") String path) {
-        String filePath = BASE_DIR + "/" + (path == null || path.isEmpty() ? "index.html" : path);
-        InputStream fileStream = getClass().getResourceAsStream(filePath);
+    public Response serveFile(@PathParam("path") final String path) {
+        final String filePath = BASE_DIR + "/" + (path == null || path.isEmpty() ? "index.html" : path);
+        final InputStream fileStream = getClass().getResourceAsStream(filePath);
 
         if (fileStream != null) {
-            String mimeType = URLConnection.guessContentTypeFromName(filePath);
-            String mediaType = mimeType != null ? mimeType : "application/octet-stream";
+            final String mimeType = URLConnection.guessContentTypeFromName(filePath);
+            final String mediaType = mimeType != null ? mimeType : "application/octet-stream";
 
-            StreamingOutput streamingOutput = output -> {
+            final StreamingOutput streamingOutput = output -> {
                 try (InputStream inputStream = "text/html".equals(mediaType)
                         ? new GlobalVariableStream(fileStream, Map.of("URI", uriInfo.getBaseUri().toString()))
                         : fileStream) {
@@ -57,7 +57,7 @@ public class StaticFileResource {
         private StringBuilder buffer = new StringBuilder();
         private int bufferIndex = 0;
 
-        public GlobalVariableStream(InputStream inputStream, Map<String, String> properties) {
+        public GlobalVariableStream(InputStream inputStream, final Map<String, String> properties) {
             super(inputStream);
             this.properties = properties;
         }
@@ -66,12 +66,12 @@ public class StaticFileResource {
         public int read() throws IOException {
             if (bufferIndex < buffer.length()) return buffer.charAt(bufferIndex++);
 
-            int firstChar = super.read();
+            final int firstChar = super.read();
             if (firstChar == '_') {
                 buffer.setLength(0);
                 bufferIndex = 0;
 
-                int secondChar = super.read();
+                final int secondChar = super.read();
                 if (secondChar == '_') {
                     int tempChar;
                     while ((tempChar = super.read()) != '_' && tempChar != -1)
@@ -108,7 +108,7 @@ public class StaticFileResource {
             int bytesRead = 0;
 
             while (bytesRead < len) {
-                int byteRead = read();
+                final int byteRead = read();
                 if (byteRead == -1) {
                     if (bytesRead == 0) {
                         return -1;

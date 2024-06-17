@@ -1,4 +1,4 @@
-INSERT INTO users (name, password, role) VALUES ('Test', '', 'ADMIN');
+INSERT INTO users (name, password, role) VALUES ('admin', '', 'ADMIN');
 
 INSERT INTO projects (name) VALUES ('Project 1');
 

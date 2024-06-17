@@ -37,11 +37,11 @@ public class App {
     private static final int START_DATABASE_SERVER = 0x01;
     private static final int START_DATABASE_MIGRATION  = 0x02;
 
-    public static void main(String[] args) throws InterruptedException, SQLException {
+    public static void main(final String[] args) throws InterruptedException, SQLException {
         Map<String, String> ServerProperties = new HashMap<>();
         int operations = 0;
 
-        for (String arg : args) {
+        for (final String arg : args) {
             switch (arg) {
                 case "--database" -> operations |= START_DATABASE_SERVER;
                 case "--migration" -> operations |= START_DATABASE_MIGRATION;
@@ -58,7 +58,7 @@ public class App {
                 }
                 default -> {
                     if (arg.startsWith("--")) {
-                        String[] keyValue = arg.substring(2).split("=", 2);
+                        final String[] keyValue = arg.substring(2).split("=", 2);
                         if (keyValue.length == 2)
                             ServerProperties.put(keyValue[0], keyValue[1]);
                     }
@@ -83,14 +83,14 @@ public class App {
     }
 
     public static boolean startMigration(String scriptPath) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        EntityTransaction transaction = entityManager.getTransaction();
+        final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        final EntityTransaction transaction = entityManager.getTransaction();
 
         try (InputStream inputStream = App.class.getClassLoader().getResourceAsStream(Objects.requireNonNull(scriptPath));
              BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream)))) {
             transaction.begin();
 
-            String sql = reader.lines().collect(Collectors.joining("\n"));
+            final String sql = reader.lines().collect(Collectors.joining("\n"));
             entityManager.createNativeQuery(sql).executeUpdate();
 
             transaction.commit();
@@ -120,13 +120,13 @@ public class App {
                 bindImplementations("org.faya.sensei.services", IService.class);
             }
 
-            private <T> void bindImplementations(String basePackage, Class<T> interfaceClass) {
+            private <T> void bindImplementations(final String basePackage, final Class<T> interfaceClass) {
                 final Reflections reflections = new Reflections(basePackage);
                 final Set<Class<? extends T>> implementations = reflections.getSubTypesOf(interfaceClass).stream()
                         .filter(cls -> !Modifier.isAbstract(cls.getModifiers()))
                         .collect(Collectors.toSet());
 
-                for (Class<? extends T> implementationClass : implementations) {
+                for (final Class<? extends T> implementationClass : implementations) {
                     final Type implementationInterface = getGenericInterface(implementationClass, interfaceClass);
                     if (implementationInterface != null) {
                         bind(implementationClass).to(implementationInterface).in(Singleton.class);
@@ -136,8 +136,8 @@ public class App {
                 }
             }
 
-            private <T> Type getGenericInterface(Class<?> clazz, Class<T> interfaceClass) {
-                for (Type type : clazz.getGenericInterfaces()) {
+            private <T> Type getGenericInterface(final Class<?> clazz, final Class<T> interfaceClass) {
+                for (final Type type : clazz.getGenericInterfaces()) {
                     if (type instanceof ParameterizedType paramType &&
                             interfaceClass.equals(paramType.getRawType()))
                         return type;

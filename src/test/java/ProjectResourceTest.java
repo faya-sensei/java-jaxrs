@@ -126,6 +126,7 @@ public class ProjectResourceTest {
     }
 
     @Nested
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     public class IntegrationTest {
 
         private static final EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("java-jaxrs-database");
@@ -214,21 +215,21 @@ public class ProjectResourceTest {
         @Test
         @Order(1)
         public void testSaveProject() {
-            final JsonObject creationTask = Json.createObjectBuilder().add("name", "New Project").build();
+            final JsonObject creationTaskBody = Json.createObjectBuilder().add("name", "New Project").build();
 
             try (Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project").build());
 
                 try (Response response = target.request(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer " + cacheToken)
-                        .post(Entity.entity(creationTask, MediaType.APPLICATION_JSON))) {
+                        .post(Entity.entity(creationTaskBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
                         assertEquals(
-                                creationTask.getJsonString("name").getString(),
+                                creationTaskBody.getJsonString("name").getString(),
                                 jsonObject.getJsonString("name").getString()
                         );
                     }
@@ -276,10 +277,7 @@ public class ProjectResourceTest {
                     try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final JsonObject jsonObject = jsonReader.readObject();
 
-                        assertEquals(
-                                projectEntities.getFirst().getName(),
-                                jsonObject.getJsonString("name").getString()
-                        );
+                        assertEquals(projectEntities.getFirst().getName(), jsonObject.getJsonString("name").getString());
 
                         for (int i = 0; i < taskEntities.size(); i++) {
                             final JsonObject taskJsonObject = jsonObject.getJsonArray("tasks").getJsonObject(i);
@@ -306,6 +304,102 @@ public class ProjectResourceTest {
                                     taskJsonObject.getInt("assignerId")
                             );
                         }
+                    }
+                }
+            }
+        }
+
+        @Test
+        @Order(4)
+        public void testSaveTask() {
+            final JsonObject creationTaskBody = Json.createObjectBuilder()
+                    .add("title", "New Test task")
+                    .add("description", "New Task Test Description.")
+                    .add("startDate", LocalDateTime.now().toString())
+                    .add("endDate", LocalDateTime.now().plusMinutes(5).toString())
+                    .add("status", StatusEntities.getFirst().getName())
+                    .add("projectId", 1)
+                    .add("assignerId", 1)
+                    .build();
+
+            try (Client client = ClientBuilder.newClient()) {
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project/tasks").build());
+
+                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + cacheToken)
+                        .post(Entity.entity(creationTaskBody, MediaType.APPLICATION_JSON))) {
+                    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject jsonObject = jsonReader.readObject();
+
+                        assertEquals(
+                                creationTaskBody.getString("title"),
+                                jsonObject.getJsonString("title").getString()
+                        );
+                        assertEquals(
+                                creationTaskBody.getString("description"),
+                                jsonObject.getJsonString("description").getString()
+                        );
+                        assertEquals(
+                                creationTaskBody.getString("status"),
+                                jsonObject.getJsonString("status").getString()
+                        );
+                        assertEquals(
+                                creationTaskBody.getInt("projectId"),
+                                jsonObject.getInt("projectId")
+                        );
+                        assertEquals(
+                                creationTaskBody.getInt("assignerId"),
+                                jsonObject.getInt("assignerId")
+                        );
+                    }
+                }
+            }
+        }
+
+        @Test
+        @Order(5)
+        public void testUpdateTask() {
+            final TaskEntityWrapper targetTaskEntity = taskEntities.getFirst();
+            final JsonObject updateTaskBody = Json.createObjectBuilder()
+                    .add("title", "Updated Test task")
+                    .add("endDate", LocalDateTime.now().plusMinutes(10).toString())
+                    .add("status", StatusEntities.getLast().getName())
+                    .build();
+
+            try (Client client = ClientBuilder.newClient()) {
+                final String path = "/api/project/tasks/%d".formatted(targetTaskEntity.getId());
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path(path).build());
+
+                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + cacheToken)
+                        .put(Entity.entity(updateTaskBody, MediaType.APPLICATION_JSON))) {
+                    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject jsonObject = jsonReader.readObject();
+
+                        assertEquals(
+                                updateTaskBody.getString("title"),
+                                jsonObject.getJsonString("title").getString()
+                        );
+                        assertEquals(
+                                targetTaskEntity.getDescription(),
+                                jsonObject.getJsonString("description").getString()
+                        );
+                        assertEquals(
+                                updateTaskBody.getString("status"),
+                                jsonObject.getJsonString("status").getString())
+                        ;
+                        assertEquals(
+                                targetTaskEntity.getProject().getId(),
+                                jsonObject.getInt("projectId")
+                        );
+                        assertEquals(
+                                targetTaskEntity.getAssigner().getId(),
+                                jsonObject.getInt("assignerId")
+                        );
                     }
                 }
             }
