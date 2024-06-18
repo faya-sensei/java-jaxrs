@@ -26,4 +26,16 @@ public final class ProjectFactory {
 
         return wrapper;
     }
+
+    public static ProjectEntityWrapper createProjectEntity(
+            final int id,
+            final String name,
+            final List<UserEntity> users
+    ) {
+        ProjectEntityWrapper wrapper = createProjectEntity(name, users);
+
+        wrapper.setId(id);
+
+        return wrapper;
+    }
 }

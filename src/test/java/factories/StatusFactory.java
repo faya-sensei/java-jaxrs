@@ -14,4 +14,12 @@ public class StatusFactory {
 
         return wrapper;
     }
+
+    public static StatusEntityWrapper createStatusEntity(final int id, final String name, final ProjectEntity project) {
+        StatusEntityWrapper wrapper = createStatusEntity(name, project);
+
+        wrapper.setId(id);
+
+        return wrapper;
+    }
 }

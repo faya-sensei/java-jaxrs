@@ -26,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reflections.Reflections;
-import wrappers.UserDTOWrapper;
 import wrappers.UserEntityWrapper;
 
 import java.io.InputStream;
@@ -117,11 +116,11 @@ public class AuthResourceTest {
                 assertTrue(actualUserEntity.isPresent());
 
                 actualUserEntity.ifPresent(user -> {
-                    final UserEntityWrapper actualUser = new UserEntityWrapper(actualUserEntity.get());
+                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(actualUserEntity.get());
 
-                    assertTrue(actualUser.getId() > 0);
-                    assertEquals(userEntity.getName(), actualUser.getName());
-                    assertEquals(userEntity.getRole(), actualUser.getRole());
+                    assertTrue(actualUserEntityWrapper.getId() > 0);
+                    assertEquals(userEntity.getName(), actualUserEntityWrapper.getName());
+                    assertEquals(userEntity.getRole(), actualUserEntityWrapper.getRole());
                 });
             }
         }
@@ -130,9 +129,7 @@ public class AuthResourceTest {
         @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
         public class AuthServiceTest {
 
-            private static UserDTOWrapper userDTO;
-
-            private static UserEntityWrapper userEntity;
+            private static UserEntityWrapper cacheUserEntity;
 
             @Mock
             private IRepository<UserEntity> userRepository;
@@ -150,7 +147,6 @@ public class AuthResourceTest {
                                 new ClassNotFoundException("No implementation found for IAuthService"));
 
                 authService = authServiceClass.getDeclaredConstructor().newInstance();
-                userDTO = UserFactory.createUserDTO("user", "password");
 
                 final Field userRepositoryField = authServiceClass.getDeclaredField("userRepository");
                 userRepositoryField.setAccessible(true);
@@ -160,13 +156,15 @@ public class AuthResourceTest {
             @Test
             @Order(1)
             public void testRegister() {
+                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").dto();
+
                 when(userRepository.post(any(UserEntity.class))).then(invocation -> {
-                    userEntity = new UserEntityWrapper(invocation.getArgument(0));
-                    userEntity.setId(1);
+                    cacheUserEntity = new UserEntityWrapper(invocation.getArgument(0));
+                    cacheUserEntity.setId(1);
                     return 1;
                 });
 
-                final Optional<UserDTO> actualUserDTO = authService.create(userDTO.dto());
+                final Optional<UserDTO> actualUserDTO = authService.create(userDTO);
 
                 verify(userRepository, times(1)).post(any(UserEntity.class));
                 assertTrue(actualUserDTO.isPresent());
@@ -175,9 +173,11 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testLogin() {
-                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(userEntity.entity()));
+                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").dto();
 
-                final Optional<UserDTO> actualUserDTO = authService.login(userDTO.dto());
+                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(cacheUserEntity.entity()));
+
+                final Optional<UserDTO> actualUserDTO = authService.login(userDTO);
 
                 verify(userRepository, times(1)).get(userDTO.getName());
                 assertTrue(actualUserDTO.isPresent());

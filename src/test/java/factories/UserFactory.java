@@ -26,4 +26,17 @@ public class UserFactory {
 
         return wrapper;
     }
+
+    public static UserEntityWrapper createUserEntity(
+            final int id,
+            final String name,
+            final String password,
+            final UserRole role
+    ) {
+        UserEntityWrapper wrapper = createUserEntity(name, password, role);
+
+        wrapper.setId(id);
+
+        return wrapper;
+    }
 }

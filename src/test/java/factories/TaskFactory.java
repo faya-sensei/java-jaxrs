@@ -53,4 +53,20 @@ public class TaskFactory {
 
         return wrapper;
     }
+
+    public static TaskEntityWrapper createTaskEntity(
+            final int id,
+            final String title,
+            final String description,
+            final LocalDateTime endDate,
+            final StatusEntity status,
+            final ProjectEntity project,
+            final UserEntity assigner
+    ) {
+        TaskEntityWrapper wrapper = createTaskEntity(title, description, endDate, status, project, assigner);
+
+        wrapper.setId(id);
+
+        return wrapper;
+    }
 }
