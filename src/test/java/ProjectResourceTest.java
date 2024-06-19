@@ -27,10 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reflections.Reflections;
-import wrappers.ProjectEntityWrapper;
-import wrappers.StatusEntityWrapper;
-import wrappers.TaskEntityWrapper;
-import wrappers.UserEntityWrapper;
+import wrappers.*;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -165,10 +162,15 @@ public class ProjectResourceTest {
             @Test
             @Order(2)
             public void testGetById() {
-                final Optional<ProjectEntity> actualProject = projectRepository.get(targetId);
+                final Optional<ProjectEntity> actualProjectEntity = projectRepository.get(targetId);
 
-                assertTrue(actualProject.isPresent());
-                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
+                assertTrue(actualProjectEntity.isPresent());
+                actualProjectEntity.ifPresent(entity -> {
+                    final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
+
+                    assertTrue(actualProjectEntityWrapper.getId() > 0);
+                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                });
             }
 
             @Test
@@ -185,19 +187,29 @@ public class ProjectResourceTest {
             public void testPut() {
                 projectEntity = ProjectFactory.createProjectEntity("updated project", List.of(userEntity.entity())).build();
 
-                final Optional<ProjectEntity> actualProject = projectRepository.put(targetId, projectEntity.entity());
+                final Optional<ProjectEntity> actualProjectEntity = projectRepository.put(targetId, projectEntity.entity());
 
-                assertTrue(actualProject.isPresent());
-                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
+                assertTrue(actualProjectEntity.isPresent());
+                actualProjectEntity.ifPresent(entity -> {
+                    final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
+
+                    assertTrue(actualProjectEntityWrapper.getId() > 0);
+                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                });
             }
 
             @Test
             @Order(5)
             public void testDelete() {
-                final Optional<ProjectEntity> actualProject = projectRepository.delete(targetId);
+                final Optional<ProjectEntity> actualProjectEntity = projectRepository.delete(targetId);
 
-                assertTrue(actualProject.isPresent());
-                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
+                assertTrue(actualProjectEntity.isPresent());
+                actualProjectEntity.ifPresent(entity -> {
+                    final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
+
+                    assertTrue(actualProjectEntityWrapper.getId() > 0);
+                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                });
             }
         }
 
@@ -243,14 +255,20 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
-                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("project").toDTO();
+                final ProjectDTOWrapper projectDTO = ProjectFactory.createProjectDTO("project", 1).build();
 
                 when(projectRepository.post(any(ProjectEntity.class))).thenReturn(1);
 
-                final Optional<ProjectDTO> actualProjectDTO = projectService.create(projectDTO);
+                final Optional<ProjectDTO> actualProjectDTO = projectService.create(projectDTO.dto());
 
                 verify(projectRepository, times(1)).post(any(ProjectEntity.class));
                 assertTrue(actualProjectDTO.isPresent());
+                actualProjectDTO.ifPresent(dto -> {
+                    final ProjectDTOWrapper actualProjectDTOWrapper = new ProjectDTOWrapper(dto);
+
+                    assertTrue(actualProjectDTOWrapper.getId() > 0);
+                    assertEquals(projectDTO.getName(), actualProjectDTOWrapper.getName());
+                });
             }
 
             @Test
@@ -258,14 +276,20 @@ public class ProjectResourceTest {
             public void testGet() {
                 final int projectId = 1;
 
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "project", List.of()).toEntity();
+                final ProjectEntityWrapper projectEntity = ProjectFactory.createProjectEntity(projectId, "project", List.of()).build();
 
-                when(projectRepository.get(projectId)).thenReturn(Optional.of(projectEntity));
+                when(projectRepository.get(projectId)).thenReturn(Optional.of(projectEntity.entity()));
 
                 final Optional<ProjectDTO> actualProjectDTO = projectService.get(projectId);
 
                 verify(projectRepository, times(1)).get(projectId);
                 assertTrue(actualProjectDTO.isPresent());
+                actualProjectDTO.ifPresent(dto -> {
+                    final ProjectDTOWrapper actualProjectDTOWrapper = new ProjectDTOWrapper(dto);
+
+                    assertTrue(actualProjectDTOWrapper.getId() > 0);
+                    assertEquals(projectEntity.getName(), actualProjectDTOWrapper.getName());
+                });
             }
 
             @Test
@@ -273,16 +297,21 @@ public class ProjectResourceTest {
             public void testUpdate() {
                 final int projectId = 1;
 
-                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("updated project").toDTO();
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "updated project", List.of()).toEntity();
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("updated project", 1).toDTO();
+                final ProjectEntityWrapper projectEntity = ProjectFactory.createProjectEntity(projectId, "updated project", List.of()).build();
 
-                when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(projectEntity));
+                when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(projectEntity.entity()));
 
                 final Optional<ProjectDTO> actualProjectDTO = projectService.update(projectId, projectDTO);
 
                 verify(projectRepository, times(1)).put(eq(projectId), any(ProjectEntity.class));
                 assertTrue(actualProjectDTO.isPresent());
-                assertEquals(projectEntity.getName(), actualProjectDTO.get().getName());
+                actualProjectDTO.ifPresent(dto -> {
+                    final ProjectDTOWrapper actualProjectDTOWrapper = new ProjectDTOWrapper(dto);
+
+                    assertTrue(actualProjectDTOWrapper.getId() > 0);
+                    assertEquals(projectEntity.getName(), actualProjectDTOWrapper.getName());
+                });
             }
 
             @Test
@@ -371,12 +400,16 @@ public class ProjectResourceTest {
             @Test
             @Order(2)
             public void testGetById() {
-                final Optional<TaskEntity> actualTask = taskRepository.get(targetId);
+                final Optional<TaskEntity> actualTaskEntity = taskRepository.get(targetId);
 
-                assertTrue(actualTask.isPresent());
-                assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
-                assertEquals(taskEntity.entity().getDescription(), actualTask.get().getDescription());
-                assertEquals(taskEntity.entity().getStatus(), actualTask.get().getStatus());
+                assertTrue(actualTaskEntity.isPresent());
+                actualTaskEntity.ifPresent(entity -> {
+                    final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
+
+                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                });
             }
 
             @Test
@@ -384,19 +417,31 @@ public class ProjectResourceTest {
             public void testPut() {
                 taskEntity = TaskFactory.createTaskEntity().setTitle("updated task").build();
 
-                final Optional<TaskEntity> actualTask = taskRepository.put(targetId, taskEntity.entity());
+                final Optional<TaskEntity> actualTaskEntity = taskRepository.put(targetId, taskEntity.entity());
 
-                assertTrue(actualTask.isPresent());
-                assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
+                assertTrue(actualTaskEntity.isPresent());
+                actualTaskEntity.ifPresent(entity -> {
+                    final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
+
+                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                });
             }
 
             @Test
             @Order(5)
             public void testDelete() {
-                final Optional<TaskEntity> actualTask = taskRepository.delete(targetId);
+                final Optional<TaskEntity> actualTaskEntity = taskRepository.delete(targetId);
 
-                assertTrue(actualTask.isPresent());
-                assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
+                assertTrue(actualTaskEntity.isPresent());
+                actualTaskEntity.ifPresent(entity -> {
+                    final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
+
+                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                });
             }
         }
 
@@ -467,21 +512,21 @@ public class ProjectResourceTest {
                 final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
                 final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).toEntity();
 
-                final TaskDTO taskDTO = TaskFactory.createTaskDTO()
+                final TaskDTOWrapper taskDTO = TaskFactory.createTaskDTO()
                         .setTitle("task")
                         .setDescription("task description")
                         .setEndDate(LocalDateTime.now().plusMinutes(10))
                         .setStatus("todo")
                         .setProjectId(1)
                         .setAssignerId(1)
-                        .toDTO();
+                        .build();
 
                 when(projectRepository.get(taskDTO.getProjectId())).thenReturn(Optional.of(projectEntity));
                 when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
                 when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
                 when(taskRepository.post(any(TaskEntity.class))).thenReturn(1);
 
-                final Optional<TaskDTO> actualTaskDTO = taskService.create(taskDTO);
+                final Optional<TaskDTO> actualTaskDTO = taskService.create(taskDTO.dto());
 
                 verify(projectRepository, times(1)).get(taskDTO.getProjectId());
                 verify(statusRepository, times(1)).get(taskDTO.getStatus());
@@ -509,17 +554,17 @@ public class ProjectResourceTest {
                         .setAssigner(userEntity)
                         .toEntity();
 
-                final TaskDTO taskDTO = TaskFactory.createTaskDTO()
+                final TaskDTOWrapper taskDTO = TaskFactory.createTaskDTO()
                         .setTitle("new task")
                         .setStatus("done")
                         .setAssignerId(2)
-                        .toDTO();
+                        .build();
 
                 when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
                 when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
                 when(taskRepository.put(eq(taskId), any(TaskEntity.class))).thenReturn(Optional.of(taskEntity));
 
-                final Optional<TaskDTO> actualTaskDTO = taskService.update(taskId, taskDTO);
+                final Optional<TaskDTO> actualTaskDTO = taskService.update(taskId, taskDTO.dto());
 
                 verify(userRepository, times(1)).get(taskDTO.getAssignerId());
                 verify(statusRepository, times(1)).get(taskDTO.getStatus());

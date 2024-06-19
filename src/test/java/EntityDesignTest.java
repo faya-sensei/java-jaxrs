@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EntityDesignTest {
 
     public static String parseAnnotationMissingMessage(final String annotation, final String className, final String fieldName) {
-        return String.format("@%s annotation is missing", annotation) +
-                (fieldName != null ? String.format("on the %s field", fieldName) : "") +
+        return String.format("@%s annotation is missing ", annotation) +
+                (fieldName != null ? String.format("on the %s field ", fieldName) : "") +
                 String.format("in %s.", className);
     }
 

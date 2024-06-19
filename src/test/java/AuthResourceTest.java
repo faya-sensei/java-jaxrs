@@ -26,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reflections.Reflections;
+import wrappers.UserDTOWrapper;
 import wrappers.UserEntityWrapper;
 
 import java.io.InputStream;
@@ -114,9 +115,8 @@ public class AuthResourceTest {
                 final Optional<UserEntity> actualUserEntity = userRepository.get(targetId);
 
                 assertTrue(actualUserEntity.isPresent());
-
-                actualUserEntity.ifPresent(user -> {
-                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(actualUserEntity.get());
+                actualUserEntity.ifPresent(entity -> {
+                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(entity);
 
                     assertTrue(actualUserEntityWrapper.getId() > 0);
                     assertEquals(userEntity.getName(), actualUserEntityWrapper.getName());
@@ -173,11 +173,11 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testLogin() {
-                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").toDTO();
+                final UserDTOWrapper userDTO = UserFactory.createUserDTO("user", "password").build();
 
                 when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(cacheUserEntity.entity()));
 
-                final Optional<UserDTO> actualUserDTO = authService.login(userDTO);
+                final Optional<UserDTO> actualUserDTO = authService.login(userDTO.dto());
 
                 verify(userRepository, times(1)).get(userDTO.getName());
                 assertTrue(actualUserDTO.isPresent());

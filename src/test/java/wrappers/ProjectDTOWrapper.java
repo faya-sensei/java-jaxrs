@@ -14,6 +14,8 @@ public record ProjectDTOWrapper(ProjectDTO dto) {
 
     private static final VarHandle nameHandle;
 
+    private static final VarHandle ownerIdHandle;
+
     private static final VarHandle tasksHandle;
 
     static {
@@ -21,6 +23,7 @@ public record ProjectDTOWrapper(ProjectDTO dto) {
             final MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(ProjectDTO.class, MethodHandles.lookup());
             idHandle = lookup.findVarHandle(ProjectDTO.class, "id", Integer.class);
             nameHandle = lookup.findVarHandle(ProjectDTO.class, "name", String.class);
+            ownerIdHandle = lookup.findVarHandle(ProjectDTO.class, "ownerId", Integer.class);
             tasksHandle = lookup.findVarHandle(ProjectDTO.class, "tasks", List.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
@@ -41,6 +44,14 @@ public record ProjectDTOWrapper(ProjectDTO dto) {
 
     public void setName(String name) {
         nameHandle.set(dto, name);
+    }
+
+    public Integer getOwnerId() {
+        return (Integer) ownerIdHandle.get(dto);
+    }
+
+    public void setOwnerId(Integer ownerId) {
+        ownerIdHandle.set(dto, ownerId);
     }
 
     public List<TaskDTO> getTasks() {
