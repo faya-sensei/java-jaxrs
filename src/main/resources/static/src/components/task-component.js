@@ -3,6 +3,7 @@ styleSheet.replaceSync`
 :host {
   display: block;
   border: 1px solid #ccc;
+  border-radius: 6px;
   padding: 10px;
   margin: 10px;
   background-color: white;
@@ -11,7 +12,8 @@ styleSheet.replaceSync`
 `;
 
 export class TaskComponent extends HTMLElement {
-    #elements;
+    #elements = {};
+    #data = {};
 
     constructor() {
         super();
@@ -32,15 +34,20 @@ export class TaskComponent extends HTMLElement {
         this.#elements = { title, description, startDate, endDate };
     }
 
-    get taskId() { return Number.parseInt(this.getAttribute("task-id")); }
+    get taskId() { return this.#data.taskId; }
+    set taskId(value) { this.#data.taskId = value; }
 
-    get taskTitle() { return this.getAttribute("task-title"); }
+    get taskTitle() { return this.#data.taskTitle; }
+    set taskTitle(value) { this.#data.taskTitle = value; }
 
-    get taskDescription() { return this.getAttribute("task-description"); }
+    get taskDescription() { return this.#data.taskDescription; }
+    set taskDescription(value) { this.#data.taskDescription = value; }
 
-    get taskStartDate() { return new Date(this.getAttribute("task-startDate")); }
+    get taskStartDate() { return this.#data.taskStartDate; }
+    set taskStartDate(value) { this.#data.taskStartDate = value; }
 
-    get taskEndDate() { return new Date(this.getAttribute("task-endDate")); }
+    get taskEndDate() { return this.#data.taskEndDate; }
+    set taskEndDate(value) { this.#data.taskEndDate = value; }
 
     connectedCallback() {
         this.addEventListener("dragstart", this.handleDragStart);
@@ -59,11 +66,8 @@ export class TaskComponent extends HTMLElement {
         const { title, description, startDate, endDate } = this.#elements;
 
         title.innerText = this.taskTitle;
-
         description.innerText = this.taskDescription;
-
         startDate.innerText = this.taskStartDate;
-
         endDate.innerText = this.taskEndDate;
     }
 }

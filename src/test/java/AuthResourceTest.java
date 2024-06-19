@@ -93,7 +93,7 @@ public class AuthResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<UserEntity>"));
 
                 userRepository = userRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
+                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
 
                 final Field userRepositoryField = userRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -156,7 +156,7 @@ public class AuthResourceTest {
             @Test
             @Order(1)
             public void testRegister() {
-                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").dto();
+                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").toDTO();
 
                 when(userRepository.post(any(UserEntity.class))).then(invocation -> {
                     cacheUserEntity = new UserEntityWrapper(invocation.getArgument(0));
@@ -173,7 +173,7 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testLogin() {
-                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").dto();
+                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").toDTO();
 
                 when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(cacheUserEntity.entity()));
 
@@ -210,25 +210,23 @@ public class AuthResourceTest {
         @Test
         @Order(1)
         public void testRegister() {
-            final JsonObject registerUserBody = Json.createObjectBuilder()
-                    .add("name", "user").add("password", "password")
-                    .build();
+            final var registerUserBody = Json.createObjectBuilder(Map.of("name", "user", "password", "password")).build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/register").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(registerUserBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertFalse(jsonObject.getJsonString("token").getString().isBlank());
-                        assertEquals(
-                                registerUserBody.getJsonString("name").getString(),
-                                jsonObject.getJsonString("name").getString()
-                        );
+                        final String actualToken = actualJsonObject.getString("token");
+                        final String actualName = actualJsonObject.getJsonString("name").getString();
+
+                        assertFalse(actualToken.isBlank());
+                        assertEquals(registerUserBody.getJsonString("name").getString(), actualName);
                     }
                 }
             }
@@ -237,25 +235,23 @@ public class AuthResourceTest {
         @Test
         @Order(2)
         public void testLogin() {
-            final JsonObject loginUserBody = Json.createObjectBuilder()
-                    .add("name", "user").add("password", "password")
-                    .build();
+            final var loginUserBody = Json.createObjectBuilder(Map.of("name", "user", "password", "password")).build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/login").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(loginUserBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertFalse(jsonObject.getJsonString("token").getString().isBlank());
-                        assertEquals(
-                                loginUserBody.getJsonString("name").getString(),
-                                jsonObject.getJsonString("name").getString()
-                        );
+                        final String actualToken = actualJsonObject.getString("token");
+                        final String actualName = actualJsonObject.getJsonString("name").getString();
+
+                        assertFalse(actualToken.isBlank());
+                        assertEquals(loginUserBody.getJsonString("name").getString(), actualName);
                     }
                 }
             }

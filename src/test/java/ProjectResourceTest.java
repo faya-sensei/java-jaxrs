@@ -1,5 +1,6 @@
 import factories.*;
 import jakarta.json.Json;
+import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.persistence.EntityManager;
@@ -48,10 +49,11 @@ public class ProjectResourceTest {
 
     @Test
     public void testAnnotations() {
-        assertAll(() -> {
+        assertAll(
+                () -> {
                     final String projectResourceClassName = ProjectResource.class.getSimpleName();
 
-                    Optional<Method> getMethod = Arrays.stream(ProjectResource.class.getDeclaredMethods())
+                    final Optional<Method> getMethod = Arrays.stream(ProjectResource.class.getDeclaredMethods())
                             .filter(method -> method.isAnnotationPresent(GET.class))
                             .findFirst();
 
@@ -60,7 +62,7 @@ public class ProjectResourceTest {
                             "One method under %s claas should be annotated with @GET".formatted(projectResourceClassName)
                     );
 
-                    Optional<Method> postMethod = Arrays.stream(ProjectResource.class.getDeclaredMethods())
+                    final Optional<Method> postMethod = Arrays.stream(ProjectResource.class.getDeclaredMethods())
                             .filter(method -> method.isAnnotationPresent(POST.class))
                             .findFirst();
 
@@ -72,7 +74,7 @@ public class ProjectResourceTest {
                 () -> {
                     final String taskResourceClassName = TaskResource.class.getSimpleName();
 
-                    Optional<Method> postMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
+                    final Optional<Method> postMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
                             .filter(method -> method.isAnnotationPresent(POST.class))
                             .findFirst();
 
@@ -81,7 +83,7 @@ public class ProjectResourceTest {
                             "One method under %s claas should be annotated with @POST".formatted(taskResourceClassName)
                     );
 
-                    Optional<Method> putMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
+                    final Optional<Method> putMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
                             .filter(method -> method.isAnnotationPresent(PUT.class))
                             .findFirst();
 
@@ -90,7 +92,7 @@ public class ProjectResourceTest {
                             "One method under %s claas should be annotated with @PUT".formatted(taskResourceClassName)
                     );
 
-                    Optional<Method> deleteMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
+                    final Optional<Method> deleteMethod = Arrays.stream(TaskResource.class.getDeclaredMethods())
                             .filter(method -> method.isAnnotationPresent(DELETE.class))
                             .findFirst();
 
@@ -144,8 +146,8 @@ public class ProjectResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<ProjectEntity>"));
 
                 projectRepository = projectRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
-                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity()));
+                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
+                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity())).build();
 
                 final Field userRepositoryField = projectRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -176,6 +178,26 @@ public class ProjectResourceTest {
 
                 assertFalse(actualProjects.isEmpty());
                 assertArrayEquals(actualProjects.toArray(), List.of(projectEntity.entity()).toArray());
+            }
+
+            @Test
+            @Order(4)
+            public void testPut() {
+                projectEntity = ProjectFactory.createProjectEntity("updated project", List.of(userEntity.entity())).build();
+
+                final Optional<ProjectEntity> actualProject = projectRepository.put(targetId, projectEntity.entity());
+
+                assertTrue(actualProject.isPresent());
+                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
+            }
+
+            @Test
+            @Order(5)
+            public void testDelete() {
+                final Optional<ProjectEntity> actualProject = projectRepository.delete(targetId);
+
+                assertTrue(actualProject.isPresent());
+                assertEquals(projectEntity.entity().getName(), actualProject.get().getName());
             }
         }
 
@@ -221,7 +243,7 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
-                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("Project").dto();
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("project").toDTO();
 
                 when(projectRepository.post(any(ProjectEntity.class))).thenReturn(1);
 
@@ -235,7 +257,8 @@ public class ProjectResourceTest {
             @Order(2)
             public void testGet() {
                 final int projectId = 1;
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "Project", List.of()).entity();
+
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "project", List.of()).toEntity();
 
                 when(projectRepository.get(projectId)).thenReturn(Optional.of(projectEntity));
 
@@ -247,9 +270,27 @@ public class ProjectResourceTest {
 
             @Test
             @Order(4)
+            public void testUpdate() {
+                final int projectId = 1;
+
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("updated project").toDTO();
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "updated project", List.of()).toEntity();
+
+                when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(projectEntity));
+
+                final Optional<ProjectDTO> actualProjectDTO = projectService.update(projectId, projectDTO);
+
+                verify(projectRepository, times(1)).put(eq(projectId), any(ProjectEntity.class));
+                assertTrue(actualProjectDTO.isPresent());
+                assertEquals(projectEntity.getName(), actualProjectDTO.get().getName());
+            }
+
+            @Test
+            @Order(5)
             public void testRemove() {
                 final int projectId = 1;
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "Project", List.of()).entity();
+
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "project", List.of()).toEntity();
 
                 when(projectRepository.delete(projectId)).thenReturn(Optional.of(projectEntity));
 
@@ -302,17 +343,17 @@ public class ProjectResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<TaskEntity>"));
 
                 taskRepository = taskRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN);
-                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity()));
-                statusEntity = StatusFactory.createStatusEntity("todo", projectEntity.entity());
-                taskEntity = TaskFactory.createTaskEntity(
-                        "task",
-                        "task description",
-                        LocalDateTime.now().plusMinutes(10),
-                        statusEntity.entity(),
-                        projectEntity.entity(),
-                        userEntity.entity()
-                );
+                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
+                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity())).build();
+                statusEntity = StatusFactory.createStatusEntity("todo", projectEntity.entity()).build();
+                taskEntity = TaskFactory.createTaskEntity()
+                        .setTitle("task")
+                        .setDescription("task description")
+                        .setEndDate(LocalDateTime.now().plusMinutes(10))
+                        .setStatus(statusEntity.entity())
+                        .setProject(projectEntity.entity())
+                        .setAssigner(userEntity.entity())
+                        .build();
 
                 final Field userRepositoryField = taskRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -336,6 +377,26 @@ public class ProjectResourceTest {
                 assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
                 assertEquals(taskEntity.entity().getDescription(), actualTask.get().getDescription());
                 assertEquals(taskEntity.entity().getStatus(), actualTask.get().getStatus());
+            }
+
+            @Test
+            @Order(4)
+            public void testPut() {
+                taskEntity = TaskFactory.createTaskEntity().setTitle("updated task").build();
+
+                final Optional<TaskEntity> actualTask = taskRepository.put(targetId, taskEntity.entity());
+
+                assertTrue(actualTask.isPresent());
+                assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
+            }
+
+            @Test
+            @Order(5)
+            public void testDelete() {
+                final Optional<TaskEntity> actualTask = taskRepository.delete(targetId);
+
+                assertTrue(actualTask.isPresent());
+                assertEquals(taskEntity.entity().getTitle(), actualTask.get().getTitle());
             }
         }
 
@@ -402,13 +463,21 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
-                final TaskDTO taskDTO = TaskFactory.createTaskDTO("task", "task description", LocalDateTime.now().plusMinutes(10), "todo", 1, 1).dto();
-                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).entity();
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of()).entity();
-                final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).entity();
+                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).toEntity();
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
+                final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).toEntity();
 
-                when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
+                final TaskDTO taskDTO = TaskFactory.createTaskDTO()
+                        .setTitle("task")
+                        .setDescription("task description")
+                        .setEndDate(LocalDateTime.now().plusMinutes(10))
+                        .setStatus("todo")
+                        .setProjectId(1)
+                        .setAssignerId(1)
+                        .toDTO();
+
                 when(projectRepository.get(taskDTO.getProjectId())).thenReturn(Optional.of(projectEntity));
+                when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
                 when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
                 when(taskRepository.post(any(TaskEntity.class))).thenReturn(1);
 
@@ -426,18 +495,56 @@ public class ProjectResourceTest {
             public void testUpdate() {
                 final int taskId = 1;
 
-                // when(taskRepository.put(taskId)).thenReturn(Optional.of(taskEntity));
+                final UserEntity userEntity = UserFactory.createUserEntity(2, "sensei", "password", UserRole.USER).toEntity();
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
+                final StatusEntity statusEntity = StatusFactory.createStatusEntity(2, "done", projectEntity).toEntity();
+                final TaskEntity taskEntity = TaskFactory.createTaskEntity()
+                        .setId(1)
+                        .setTitle("new task")
+                        .setDescription("task description")
+                        .setStartDate(LocalDateTime.now())
+                        .setEndDate(LocalDateTime.now().plusMinutes(10))
+                        .setStatus(statusEntity)
+                        .setProject(projectEntity)
+                        .setAssigner(userEntity)
+                        .toEntity();
+
+                final TaskDTO taskDTO = TaskFactory.createTaskDTO()
+                        .setTitle("new task")
+                        .setStatus("done")
+                        .setAssignerId(2)
+                        .toDTO();
+
+                when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
+                when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
+                when(taskRepository.put(eq(taskId), any(TaskEntity.class))).thenReturn(Optional.of(taskEntity));
+
+                final Optional<TaskDTO> actualTaskDTO = taskService.update(taskId, taskDTO);
+
+                verify(userRepository, times(1)).get(taskDTO.getAssignerId());
+                verify(statusRepository, times(1)).get(taskDTO.getStatus());
+                verify(taskRepository, times(1)).put(eq(taskId), any(TaskEntity.class));
+                assertTrue(actualTaskDTO.isPresent());
             }
 
             @Test
             @Order(3)
             public void testRemove() {
                 final int taskId = 1;
-                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).entity();
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of()).entity();
-                final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).entity();
-                final TaskEntity taskEntity = TaskFactory.createTaskEntity(1, "task", "task description",
-                        LocalDateTime.now().plusMinutes(10), statusEntity, projectEntity, userEntity).entity();
+
+                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).toEntity();
+                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
+                final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).toEntity();
+                final TaskEntity taskEntity = TaskFactory.createTaskEntity()
+                        .setId(1)
+                        .setTitle("task")
+                        .setDescription("task description")
+                        .setStartDate(LocalDateTime.now())
+                        .setEndDate(LocalDateTime.now().plusMinutes(10))
+                        .setStatus(statusEntity)
+                        .setProject(projectEntity)
+                        .setAssigner(userEntity)
+                        .toEntity();
 
                 when(taskRepository.delete(taskId)).thenReturn(Optional.of(taskEntity));
 
@@ -459,8 +566,6 @@ public class ProjectResourceTest {
 
         private static final URI uri = instance.configuration().baseUri();
 
-        private static UserEntityWrapper userEntity;
-
         private static List<ProjectEntityWrapper> projectEntities;
 
         private static List<StatusEntityWrapper> StatusEntities;
@@ -471,63 +576,59 @@ public class ProjectResourceTest {
 
         @BeforeAll
         public static void setUp() {
-            final JsonObject registerUser = Json.createObjectBuilder().add("name", "user").add("password", "password").build();
+            final JsonObject registerUserBody = Json.createObjectBuilder(Map.of("name", "user", "password", "password")).build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth/register").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.entity(registerUser, MediaType.APPLICATION_JSON))) {
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(registerUserBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
                         final EntityManager entityManager = entityManagerFactory.createEntityManager();
                         final EntityTransaction transaction = entityManager.getTransaction();
                         final JsonObject jsonObject = jsonReader.readObject();
 
+                        transaction.begin();
+
                         cacheToken = jsonObject.getJsonString("token").getString();
 
-                        try {
-                            transaction.begin();
+                        final UserEntityWrapper userEntity = new UserEntityWrapper(entityManager.find(UserEntity.class, jsonObject.getInt("id")));
 
-                            userEntity = new UserEntityWrapper(entityManager.find(UserEntity.class, jsonObject.getInt("id")));
+                        projectEntities = List.of(
+                                ProjectFactory.createProjectEntity("project", List.of(userEntity.entity())).build()
+                        );
+                        StatusEntities = List.of(
+                                StatusFactory.createStatusEntity("todo", projectEntities.getFirst().entity()).build(),
+                                StatusFactory.createStatusEntity("done", projectEntities.getFirst().entity()).build()
+                        );
+                        taskEntities = List.of(
+                                TaskFactory.createTaskEntity()
+                                        .setTitle("test task 1")
+                                        .setDescription("task 1 test description.")
+                                        .setStartDate(LocalDateTime.now())
+                                        .setEndDate(LocalDateTime.now().plusMinutes(10))
+                                        .setStatus(StatusEntities.getFirst().entity())
+                                        .setProject(projectEntities.getFirst().entity())
+                                        .setAssigner(userEntity.entity())
+                                        .build(),
+                                TaskFactory.createTaskEntity()
+                                        .setTitle("test task 2")
+                                        .setDescription("task 2 test description.")
+                                        .setStartDate(LocalDateTime.now())
+                                        .setEndDate(LocalDateTime.now().plusMinutes(20))
+                                        .setStatus(StatusEntities.getLast().entity())
+                                        .setProject(projectEntities.getFirst().entity())
+                                        .setAssigner(userEntity.entity())
+                                        .build()
+                        );
 
-                            projectEntities = List.of(
-                                    ProjectFactory.createProjectEntity("project", List.of(userEntity.entity()))
-                            );
+                        projectEntities.forEach(project -> entityManager.persist(project.entity()));
+                        StatusEntities.forEach(status -> entityManager.persist(status.entity()));
+                        taskEntities.forEach(task -> entityManager.persist(task.entity()));
 
-                            StatusEntities = List.of(
-                                    StatusFactory.createStatusEntity("todo", projectEntities.getFirst().entity()),
-                                    StatusFactory.createStatusEntity("done", projectEntities.getFirst().entity())
-                            );
-
-                            taskEntities = List.of(
-                                    TaskFactory.createTaskEntity(
-                                            "test task 1",
-                                            "task 1 test description.",
-                                            LocalDateTime.now().plusMinutes(10),
-                                            StatusEntities.getFirst().entity(),
-                                            projectEntities.getFirst().entity(),
-                                            userEntity.entity()
-                                    ),
-                                    TaskFactory.createTaskEntity(
-                                            "test task 2",
-                                            "task 2 test description.",
-                                            LocalDateTime.now().plusMinutes(20),
-                                            StatusEntities.getLast().entity(),
-                                            projectEntities.getFirst().entity(),
-                                            userEntity.entity()
-                                    )
-                            );
-
-                            projectEntities.forEach(project -> entityManager.persist(project.entity()));
-                            StatusEntities.forEach(status -> entityManager.persist(status.entity()));
-                            taskEntities.forEach(task -> entityManager.persist(task.entity()));
-
-                            transaction.commit();
-                        } catch (Exception e) {
-                            if (transaction.isActive())
-                                transaction.rollback();
-                        }
+                        transaction.commit();
 
                         entityManager.close();
                     }
@@ -538,23 +639,24 @@ public class ProjectResourceTest {
         @Test
         @Order(1)
         public void testSaveProject() {
-            final JsonObject creationTaskBody = Json.createObjectBuilder().add("name", "new project").build();
+            final JsonObject creationTaskBody = Json.createObjectBuilder()
+                    .add("name", "new project")
+                    .build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + cacheToken)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
                         .post(Entity.entity(creationTaskBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertEquals(
-                                creationTaskBody.getJsonString("name").getString(),
-                                jsonObject.getJsonString("name").getString()
-                        );
+                        final String actualName = actualJsonObject.getJsonString("name").getString();
+
+                        assertEquals(creationTaskBody.getJsonString("name").getString(), actualName);
                     }
                 }
             }
@@ -563,21 +665,20 @@ public class ProjectResourceTest {
         @Test
         @Order(2)
         public void testGetAllProjects() {
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + cacheToken)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
                         .get()) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readArray().getFirst().asJsonObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readArray().getFirst().asJsonObject();
 
-                        assertEquals(
-                                projectEntities.getFirst().getName(),
-                                jsonObject.getJsonString("name").getString()
-                        );
+                        final String actualName = actualJsonObject.getJsonString("name").getString();
+
+                        assertEquals(projectEntities.getFirst().getName(), actualName);
                     }
                 }
             }
@@ -588,44 +689,39 @@ public class ProjectResourceTest {
         public void testGetProject() {
             final ProjectEntityWrapper targetProjectEntity = projectEntities.getFirst();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final String path = "/api/project/%d".formatted(targetProjectEntity.getId());
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path(path).build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + cacheToken)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
                         .get()) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertEquals(projectEntities.getFirst().getName(), jsonObject.getJsonString("name").getString());
+                        final String actualName = actualJsonObject.getJsonString("name").getString();
+
+                        assertEquals(projectEntities.getFirst().getName(), actualName);
+
+                        final JsonArray actualTaskJsonArray = actualJsonObject.getJsonArray("tasks");
 
                         for (int i = 0; i < taskEntities.size(); i++) {
-                            final JsonObject taskJsonObject = jsonObject.getJsonArray("tasks").getJsonObject(i);
+                            final JsonObject actualTaskJsonObject = actualTaskJsonArray.getJsonObject(i);
                             final TaskEntityWrapper expectedTask = taskEntities.get(i);
 
-                            assertEquals(
-                                    expectedTask.getTitle(),
-                                    taskJsonObject.getJsonString("title").getString()
-                            );
-                            assertEquals(
-                                    expectedTask.getDescription(),
-                                    taskJsonObject.getJsonString("description").getString()
-                            );
-                            assertEquals(
-                                    expectedTask.getStatus().getName(),
-                                    taskJsonObject.getJsonString("status").getString()
-                            );
-                            assertEquals(
-                                    expectedTask.getProject().getId(),
-                                    taskJsonObject.getInt("projectId")
-                            );
-                            assertEquals(
-                                    expectedTask.getAssigner().getId(),
-                                    taskJsonObject.getInt("assignerId")
-                            );
+                            final String actualTitle = actualTaskJsonObject.getJsonString("title").getString();
+                            final String actualDescription = actualTaskJsonObject.getJsonString("description").getString();
+                            final String actualStatus = actualTaskJsonObject.getJsonString("status").getString();
+                            final int actualProjectId = actualTaskJsonObject.getInt("projectId");
+                            final int actualAssignerId = actualTaskJsonObject.getInt("assignerId");
+
+                            assertEquals(expectedTask.getTitle(), actualTitle);
+                            assertEquals(expectedTask.getDescription(), actualDescription);
+                            assertEquals(expectedTask.getStatus().getName(), actualStatus);
+                            assertEquals(expectedTask.getProject().getId(), actualProjectId);
+                            assertEquals(expectedTask.getAssigner().getId(), actualAssignerId);
                         }
                     }
                 }
@@ -645,37 +741,28 @@ public class ProjectResourceTest {
                     .add("assignerId", 1)
                     .build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project/tasks").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + cacheToken)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
                         .post(Entity.entity(creationTaskBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertEquals(
-                                creationTaskBody.getString("title"),
-                                jsonObject.getJsonString("title").getString()
-                        );
-                        assertEquals(
-                                creationTaskBody.getString("description"),
-                                jsonObject.getJsonString("description").getString()
-                        );
-                        assertEquals(
-                                creationTaskBody.getString("status"),
-                                jsonObject.getJsonString("status").getString()
-                        );
-                        assertEquals(
-                                creationTaskBody.getInt("projectId"),
-                                jsonObject.getInt("projectId")
-                        );
-                        assertEquals(
-                                creationTaskBody.getInt("assignerId"),
-                                jsonObject.getInt("assignerId")
-                        );
+                        final String actualTitle = actualJsonObject.getJsonString("title").getString();
+                        final String actualDescription = actualJsonObject.getJsonString("description").getString();
+                        final String actualStatus = actualJsonObject.getJsonString("status").getString();
+                        final int actualProjectId = actualJsonObject.getInt("projectId");
+                        final int actualAssignerId = actualJsonObject.getInt("assignerId");
+
+                        assertEquals(creationTaskBody.getString("title"), actualTitle);
+                        assertEquals(creationTaskBody.getString("description"), actualDescription);
+                        assertEquals(creationTaskBody.getString("status"), actualStatus);
+                        assertEquals(creationTaskBody.getInt("projectId"), actualProjectId);
+                        assertEquals(creationTaskBody.getInt("assignerId"), actualAssignerId);
                     }
                 }
             }
@@ -691,38 +778,29 @@ public class ProjectResourceTest {
                     .add("status", StatusEntities.getLast().getName())
                     .build();
 
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final String path = "/api/project/tasks/%d".formatted(targetTaskEntity.getId());
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path(path).build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + cacheToken)
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
                         .put(Entity.entity(updateTaskBody, MediaType.APPLICATION_JSON))) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
-                        assertEquals(
-                                updateTaskBody.getString("title"),
-                                jsonObject.getJsonString("title").getString()
-                        );
-                        assertEquals(
-                                targetTaskEntity.getDescription(),
-                                jsonObject.getJsonString("description").getString()
-                        );
-                        assertEquals(
-                                updateTaskBody.getString("status"),
-                                jsonObject.getJsonString("status").getString())
-                        ;
-                        assertEquals(
-                                targetTaskEntity.getProject().getId(),
-                                jsonObject.getInt("projectId")
-                        );
-                        assertEquals(
-                                targetTaskEntity.getAssigner().getId(),
-                                jsonObject.getInt("assignerId")
-                        );
+                        final String actualTitle = actualJsonObject.getJsonString("title").getString();
+                        final String actualDescription = actualJsonObject.getJsonString("description").getString();
+                        final String actualStatus = actualJsonObject.getJsonString("status").getString();
+                        final int actualProjectId = actualJsonObject.getInt("projectId");
+                        final int actualAssignerId = actualJsonObject.getInt("assignerId");
+
+                        assertEquals(updateTaskBody.getString("title"), actualTitle);
+                        assertEquals(targetTaskEntity.getDescription(), actualDescription);
+                        assertEquals(updateTaskBody.getString("status"), actualStatus);
+                        assertEquals(targetTaskEntity.getProject().getId(), actualProjectId);
+                        assertEquals(targetTaskEntity.getAssigner().getId(), actualAssignerId);
                     }
                 }
             }

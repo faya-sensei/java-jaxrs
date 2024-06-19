@@ -51,27 +51,30 @@ public class HeartBeatResourceTest {
 
         @Test
         public void testHeartBeat() {
-            try (Client client = ClientBuilder.newClient()) {
+            try (final Client client = ClientBuilder.newClient()) {
                 final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/heartbeat").build());
 
-                try (Response response = target.request(MediaType.APPLICATION_JSON).get()) {
+                try (final Response response = target.request(MediaType.APPLICATION_JSON).get()) {
                     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
-                    try (JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
-                        final JsonObject jsonObject = jsonReader.readObject();
-
-                        assertEquals("alive", jsonObject.getJsonString("status").getString());
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
 
                         final DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
                                 .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME) // 2011-12-03T10:15:30
                                 .appendOptional(DateTimeFormatter.ISO_DATE_TIME) // 2011-12-03T10:15:30+01:00
                                 .appendOptional(DateTimeFormatter.ISO_INSTANT)  // 2011-12-03T10:15:30Z
                                 .toFormatter();
+                        final LocalDateTime actualTime = LocalDateTime.parse(
+                                actualJsonObject.getJsonString("time").getString(),
+                                dateTimeFormatter
+                        );
+                        final String actualStatus = actualJsonObject.getJsonString("status").getString();
 
-                        final LocalDateTime time = LocalDateTime.parse(jsonObject.getJsonString("time").getString(), dateTimeFormatter);
-                        final Duration duration = Duration.between(time, LocalDateTime.now());
+                        final Duration epsilon = Duration.ofSeconds(1L);
 
-                        assertTrue(duration.compareTo(Duration.ofSeconds(10L)) <= 0);
+                        assertTrue(Duration.between(actualTime, LocalDateTime.now()).compareTo(epsilon) <= 0);
+                        assertEquals("alive", actualStatus);
                     }
                 }
             }

@@ -33,7 +33,7 @@ export async function getAllTasks() {
 
         return await response.json();
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
@@ -49,25 +49,28 @@ export async function getTask(id) {
 
         return await response.json();
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
 /**
- * Save one task.
+ * Create or update one task.
  *
  * @param {TaskDTO} task The task to save.
  * @returns {Promise<TaskDTO>} The full info of the task.
  */
 export async function saveTask(task) {
     try {
-        const response = await fetch(API.todos, {
-            method: "POST",
+        const response = await fetch(`${API.todos}/${task.id ?? ''}`, {
+            method: task.id ? "PUT" : "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(task),
         });
 
         return await response.json();
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }

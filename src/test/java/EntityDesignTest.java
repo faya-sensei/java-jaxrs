@@ -20,6 +20,13 @@ public class EntityDesignTest {
                 String.format("in %s.", className);
     }
 
+    public static String parseGetterSetterErrorMessage(final String className, final String fieldName) {
+        final String getterName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+        final String setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+
+        return String.format("%s or %s is missing or incorrect implemented in %s.", getterName, setterName, className);
+    }
+
     @Nested
     public class UserEntityTests {
 
@@ -79,27 +86,27 @@ public class EntityDesignTest {
             final Method setId = UserEntity.class.getMethod("setId", Integer.class);
             final Method getId = UserEntity.class.getMethod("getId");
             setId.invoke(user, id);
-            assertEquals(id, getId.invoke(user), "getId or setId is incorrect in %s.".formatted(className));
+            assertEquals(id, getId.invoke(user), parseGetterSetterErrorMessage(className, "id"));
 
             final Method setName = UserEntity.class.getMethod("setName", String.class);
             final Method getName = UserEntity.class.getMethod("getName");
             setName.invoke(user, name);
-            assertEquals(name, getName.invoke(user), "getName or setName is incorrect in %s.".formatted(className));
+            assertEquals(name, getName.invoke(user), parseGetterSetterErrorMessage(className, "name"));
 
             final Method setRole = UserEntity.class.getMethod("setRole", UserRole.class);
             final Method getRole = UserEntity.class.getMethod("getRole");
             setRole.invoke(user, role);
-            assertEquals(role, getRole.invoke(user), "getRole or setRole is incorrect in %s.".formatted(className));
+            assertEquals(role, getRole.invoke(user), parseGetterSetterErrorMessage(className, "role"));
 
             final Method setProjects = UserEntity.class.getMethod("setProjects", List.class);
             final Method getProjects = UserEntity.class.getMethod("getProjects");
             setProjects.invoke(user, projects);
-            assertEquals(projects, getProjects.invoke(user), "getProjects or setProjects is incorrect in %s.".formatted(className));
+            assertEquals(projects, getProjects.invoke(user), parseGetterSetterErrorMessage(className, "projects"));
 
             final Method setAssignedTasks = UserEntity.class.getMethod("setAssignedTasks", List.class);
             final Method getAssignedTasks = UserEntity.class.getMethod("getAssignedTasks");
             setAssignedTasks.invoke(user, assignedTasks);
-            assertEquals(assignedTasks, getAssignedTasks.invoke(user), "getAssignedTasks or setAssignedTasks is incorrect in %s.".formatted(className));
+            assertEquals(assignedTasks, getAssignedTasks.invoke(user), parseGetterSetterErrorMessage(className, "assignedTasks"));
         }
     }
 
@@ -171,22 +178,22 @@ public class EntityDesignTest {
             final Method setId = ProjectEntity.class.getMethod("setId", Integer.class);
             final Method getId = ProjectEntity.class.getMethod("getId");
             setId.invoke(project, id);
-            assertEquals(id, getId.invoke(project), "getId or setId is incorrect in %s.".formatted(className));
+            assertEquals(id, getId.invoke(project), parseGetterSetterErrorMessage(className, "id"));
 
             final Method setUsers = ProjectEntity.class.getMethod("setUsers", List.class);
             final Method getUsers = ProjectEntity.class.getMethod("getUsers");
             setUsers.invoke(project, users);
-            assertEquals(users, getUsers.invoke(project), "getUsers or setUsers is incorrect in %s.".formatted(className));
+            assertEquals(users, getUsers.invoke(project), parseGetterSetterErrorMessage(className, "users"));
 
             final Method setStatuses = ProjectEntity.class.getMethod("setStatuses", List.class);
             final Method getStatuses = ProjectEntity.class.getMethod("getStatuses");
             setStatuses.invoke(project, statuses);
-            assertEquals(statuses, getStatuses.invoke(project), "getStatuses or setStatuses is incorrect in %s.".formatted(className));
+            assertEquals(statuses, getStatuses.invoke(project), parseGetterSetterErrorMessage(className, "statuses"));
 
             final Method setTasks = ProjectEntity.class.getMethod("setTasks", List.class);
             final Method getTasks = ProjectEntity.class.getMethod("getTasks");
             setTasks.invoke(project, tasks);
-            assertEquals(tasks, getTasks.invoke(project), "getTasks or setTasks is incorrect in %s.".formatted(className));
+            assertEquals(tasks, getTasks.invoke(project), parseGetterSetterErrorMessage(className, "tasks"));
         }
     }
 
@@ -248,22 +255,22 @@ public class EntityDesignTest {
             final Method setId = StatusEntity.class.getMethod("setId", Integer.class);
             final Method getId = StatusEntity.class.getMethod("getId");
             setId.invoke(status, id);
-            assertEquals(id, getId.invoke(status), "getId or setId is incorrect in %s.".formatted(className));
+            assertEquals(id, getId.invoke(status), parseGetterSetterErrorMessage(className, "id"));
 
             final Method setName = StatusEntity.class.getMethod("setName", String.class);
             final Method getName = StatusEntity.class.getMethod("getName");
             setName.invoke(status, name);
-            assertEquals(name, getName.invoke(status), "getName or setName is incorrect in %s.".formatted(className));
+            assertEquals(name, getName.invoke(status), parseGetterSetterErrorMessage(className, "name"));
 
             final Method setProject = StatusEntity.class.getMethod("setProject", ProjectEntity.class);
             final Method getProject = StatusEntity.class.getMethod("getProject");
             setProject.invoke(status, project);
-            assertEquals(project, getProject.invoke(status), "getProject or setProject is incorrect in %s.".formatted(className));
+            assertEquals(project, getProject.invoke(status), parseGetterSetterErrorMessage(className, "project"));
 
             final Method setTasks = StatusEntity.class.getMethod("setTasks", List.class);
             final Method getTasks = StatusEntity.class.getMethod("getTasks");
             setTasks.invoke(status, tasks);
-            assertEquals(tasks, getTasks.invoke(status), "getTasks or setTasks is incorrect in %s.".formatted(className));
+            assertEquals(tasks, getTasks.invoke(status), parseGetterSetterErrorMessage(className, "tasks"));
         }
     }
 
@@ -339,42 +346,42 @@ public class EntityDesignTest {
             final Method setId = TaskEntity.class.getMethod("setId", Integer.class);
             final Method getId = TaskEntity.class.getMethod("getId");
             setId.invoke(task, id);
-            assertEquals(id, getId.invoke(task), "getId or setId is incorrect in %s.".formatted(className));
+            assertEquals(id, getId.invoke(task), parseGetterSetterErrorMessage(className, "id"));
 
             final Method setTitle = TaskEntity.class.getMethod("setTitle", String.class);
             final Method getTitle = TaskEntity.class.getMethod("getTitle");
             setTitle.invoke(task, title);
-            assertEquals(title, getTitle.invoke(task), "getTitle or setTitle is incorrect in %s.".formatted(className));
+            assertEquals(title, getTitle.invoke(task), parseGetterSetterErrorMessage(className, "title"));
 
             final Method setDescription = TaskEntity.class.getMethod("setDescription", String.class);
             final Method getDescription = TaskEntity.class.getMethod("getDescription");
             setDescription.invoke(task, description);
-            assertEquals(description, getDescription.invoke(task), "getDescription or setDescription is incorrect in %s.".formatted(className));
+            assertEquals(description, getDescription.invoke(task), parseGetterSetterErrorMessage(className, "description"));
 
             final Method setStartDate = TaskEntity.class.getMethod("setStartDate", LocalDateTime.class);
             final Method getStartDate = TaskEntity.class.getMethod("getStartDate");
             setStartDate.invoke(task, startDate);
-            assertEquals(startDate, getStartDate.invoke(task), "getStartDate or setStartDate is incorrect in %s.".formatted(className));
+            assertEquals(startDate, getStartDate.invoke(task), parseGetterSetterErrorMessage(className, "startDate"));
 
             final Method setEndDate = TaskEntity.class.getMethod("setEndDate", LocalDateTime.class);
             final Method getEndDate = TaskEntity.class.getMethod("getEndDate");
             setEndDate.invoke(task, endDate);
-            assertEquals(endDate, getEndDate.invoke(task), "getEndDate or setEndDate is incorrect in %s.".formatted(className));
+            assertEquals(endDate, getEndDate.invoke(task), parseGetterSetterErrorMessage(className, "endDate"));
 
             final Method setProject = TaskEntity.class.getMethod("setProject", ProjectEntity.class);
             final Method getProject = TaskEntity.class.getMethod("getProject");
             setProject.invoke(task, project);
-            assertEquals(project, getProject.invoke(task), "getProject or setProject is incorrect in %s.".formatted(className));
+            assertEquals(project, getProject.invoke(task), parseGetterSetterErrorMessage(className, "project"));
 
             final Method setStatus = TaskEntity.class.getMethod("setStatus", StatusEntity.class);
             final Method getStatus = TaskEntity.class.getMethod("getStatus");
             setStatus.invoke(task, status);
-            assertEquals(status, getStatus.invoke(task), "getStatus or setStatus is incorrect in %s.".formatted(className));
+            assertEquals(status, getStatus.invoke(task), parseGetterSetterErrorMessage(className, "status"));
 
             final Method setAssigner = TaskEntity.class.getMethod("setAssigner", UserEntity.class);
             final Method getAssigner = TaskEntity.class.getMethod("getAssigner");
             setAssigner.invoke(task, assigner);
-            assertEquals(assigner, getAssigner.invoke(task), "getAssigner or setAssigner is incorrect in %s.".formatted(className));
+            assertEquals(assigner, getAssigner.invoke(task), parseGetterSetterErrorMessage(className, "assigner"));
         }
     }
 }
