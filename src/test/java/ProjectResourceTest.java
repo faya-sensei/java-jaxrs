@@ -113,9 +113,7 @@ public class ProjectResourceTest {
 
             private static IRepository<ProjectEntity> projectRepository;
 
-            private static ProjectEntityWrapper projectEntity;
-
-            private static UserEntityWrapper userEntity;
+            private static ProjectEntityWrapper cacheProjectEntity;
 
             private static int targetId = -1;
 
@@ -143,8 +141,8 @@ public class ProjectResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<ProjectEntity>"));
 
                 projectRepository = projectRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
-                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity())).build();
+                UserEntity userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).toEntity();
+                cacheProjectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity)).build();
 
                 final Field userRepositoryField = projectRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -154,7 +152,7 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testPost() {
-                targetId = projectRepository.post(projectEntity.entity());
+                targetId = projectRepository.post(cacheProjectEntity.entity());
 
                 assertTrue(targetId > 0);
             }
@@ -169,7 +167,7 @@ public class ProjectResourceTest {
                     final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
 
                     assertTrue(actualProjectEntityWrapper.getId() > 0);
-                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                    assertEquals(cacheProjectEntity.getName(), actualProjectEntityWrapper.getName());
                 });
             }
 
@@ -179,22 +177,22 @@ public class ProjectResourceTest {
                 final Collection<ProjectEntity> actualProjects = projectRepository.getBy("users.name", "user");
 
                 assertFalse(actualProjects.isEmpty());
-                assertArrayEquals(actualProjects.toArray(), List.of(projectEntity.entity()).toArray());
+                assertArrayEquals(actualProjects.toArray(), List.of(cacheProjectEntity.entity()).toArray());
             }
 
             @Test
             @Order(4)
             public void testPut() {
-                projectEntity = ProjectFactory.createProjectEntity("updated project", List.of(userEntity.entity())).build();
+                cacheProjectEntity = ProjectFactory.createProjectEntity(cacheProjectEntity).setName("updated project").build();
 
-                final Optional<ProjectEntity> actualProjectEntity = projectRepository.put(targetId, projectEntity.entity());
+                final Optional<ProjectEntity> actualProjectEntity = projectRepository.put(targetId, cacheProjectEntity.entity());
 
                 assertTrue(actualProjectEntity.isPresent());
                 actualProjectEntity.ifPresent(entity -> {
                     final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
 
                     assertTrue(actualProjectEntityWrapper.getId() > 0);
-                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                    assertEquals(cacheProjectEntity.getName(), actualProjectEntityWrapper.getName());
                 });
             }
 
@@ -208,7 +206,7 @@ public class ProjectResourceTest {
                     final ProjectEntityWrapper actualProjectEntityWrapper = new ProjectEntityWrapper(entity);
 
                     assertTrue(actualProjectEntityWrapper.getId() > 0);
-                    assertEquals(projectEntity.getName(), actualProjectEntityWrapper.getName());
+                    assertEquals(cacheProjectEntity.getName(), actualProjectEntityWrapper.getName());
                 });
             }
         }
@@ -216,6 +214,8 @@ public class ProjectResourceTest {
         @Nested
         @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
         public class ProjectServiceTest {
+
+            private static ProjectEntityWrapper cacheProjectEntity;
 
             @Mock
             private IRepository<ProjectEntity> projectRepository;
@@ -255,11 +255,15 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
-                final ProjectDTOWrapper projectDTO = ProjectFactory.createProjectDTO("project", 1).build();
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("project", List.of(1)).toDTO();
 
-                when(projectRepository.post(any(ProjectEntity.class))).thenReturn(1);
+                when(projectRepository.post(any(ProjectEntity.class))).then(invocation -> {
+                    cacheProjectEntity = new ProjectEntityWrapper(invocation.getArgument(0));
+                    cacheProjectEntity.setId(1);
+                    return 1;
+                });
 
-                final Optional<ProjectDTO> actualProjectDTO = projectService.create(projectDTO.dto());
+                final Optional<ProjectDTO> actualProjectDTO = projectService.create(projectDTO);
 
                 verify(projectRepository, times(1)).post(any(ProjectEntity.class));
                 assertTrue(actualProjectDTO.isPresent());
@@ -267,7 +271,7 @@ public class ProjectResourceTest {
                     final ProjectDTOWrapper actualProjectDTOWrapper = new ProjectDTOWrapper(dto);
 
                     assertTrue(actualProjectDTOWrapper.getId() > 0);
-                    assertEquals(projectDTO.getName(), actualProjectDTOWrapper.getName());
+                    assertEquals(cacheProjectEntity.getName(), actualProjectDTOWrapper.getName());
                 });
             }
 
@@ -297,10 +301,11 @@ public class ProjectResourceTest {
             public void testUpdate() {
                 final int projectId = 1;
 
-                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("updated project", 1).toDTO();
-                final ProjectEntityWrapper projectEntity = ProjectFactory.createProjectEntity(projectId, "updated project", List.of()).build();
+                cacheProjectEntity = ProjectFactory.createProjectEntity(cacheProjectEntity).setName("updated project").build();
 
-                when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(projectEntity.entity()));
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO(cacheProjectEntity.getName(), List.of(1)).toDTO();
+
+                when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(cacheProjectEntity.entity()));
 
                 final Optional<ProjectDTO> actualProjectDTO = projectService.update(projectId, projectDTO);
 
@@ -310,7 +315,7 @@ public class ProjectResourceTest {
                     final ProjectDTOWrapper actualProjectDTOWrapper = new ProjectDTOWrapper(dto);
 
                     assertTrue(actualProjectDTOWrapper.getId() > 0);
-                    assertEquals(projectEntity.getName(), actualProjectDTOWrapper.getName());
+                    assertEquals(cacheProjectEntity.getName(), actualProjectDTOWrapper.getName());
                 });
             }
 
@@ -319,9 +324,7 @@ public class ProjectResourceTest {
             public void testRemove() {
                 final int projectId = 1;
 
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(projectId, "project", List.of()).toEntity();
-
-                when(projectRepository.delete(projectId)).thenReturn(Optional.of(projectEntity));
+                when(projectRepository.delete(projectId)).thenReturn(Optional.of(cacheProjectEntity.entity()));
 
                 final boolean actualResult = projectService.remove(projectId);
 
@@ -338,13 +341,7 @@ public class ProjectResourceTest {
 
             private static IRepository<TaskEntity> taskRepository;
 
-            private static ProjectEntityWrapper projectEntity;
-
-            private static UserEntityWrapper userEntity;
-
-            private static StatusEntityWrapper statusEntity;
-
-            private static TaskEntityWrapper taskEntity;
+            private static TaskEntityWrapper cacheTaskEntity;
 
             private static int targetId = -1;
 
@@ -372,16 +369,16 @@ public class ProjectResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<TaskEntity>"));
 
                 taskRepository = taskRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
-                projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity.entity())).build();
-                statusEntity = StatusFactory.createStatusEntity("todo", projectEntity.entity()).build();
-                taskEntity = TaskFactory.createTaskEntity()
+                UserEntity userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).toEntity();
+                ProjectEntity projectEntity = ProjectFactory.createProjectEntity("project", List.of(userEntity)).toEntity();
+                StatusEntity statusEntity = StatusFactory.createStatusEntity("todo", projectEntity).toEntity();
+                cacheTaskEntity = TaskFactory.createTaskEntity()
                         .setTitle("task")
                         .setDescription("task description")
                         .setEndDate(LocalDateTime.now().plusMinutes(10))
-                        .setStatus(statusEntity.entity())
-                        .setProject(projectEntity.entity())
-                        .setAssigner(userEntity.entity())
+                        .setStatus(statusEntity)
+                        .setProject(projectEntity)
+                        .setAssigner(userEntity)
                         .build();
 
                 final Field userRepositoryField = taskRepositoryClass.getDeclaredField("entityManager");
@@ -392,7 +389,7 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testPost() {
-                targetId = taskRepository.post(taskEntity.entity());
+                targetId = taskRepository.post(cacheTaskEntity.entity());
 
                 assertTrue(targetId > 0);
             }
@@ -406,26 +403,27 @@ public class ProjectResourceTest {
                 actualTaskEntity.ifPresent(entity -> {
                     final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
 
-                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
-                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
-                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                    assertEquals(cacheTaskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(cacheTaskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(cacheTaskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
                 });
             }
 
             @Test
             @Order(4)
             public void testPut() {
-                taskEntity = TaskFactory.createTaskEntity().setTitle("updated task").build();
+                cacheTaskEntity = TaskFactory.createTaskEntity(cacheTaskEntity).setTitle("updated task").build();
 
-                final Optional<TaskEntity> actualTaskEntity = taskRepository.put(targetId, taskEntity.entity());
+                final Optional<TaskEntity> actualTaskEntity = taskRepository.put(targetId,
+                        TaskFactory.createTaskEntity().setTitle("updated task").toEntity());
 
                 assertTrue(actualTaskEntity.isPresent());
                 actualTaskEntity.ifPresent(entity -> {
                     final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
 
-                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
-                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
-                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                    assertEquals(cacheTaskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(cacheTaskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(cacheTaskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
                 });
             }
 
@@ -438,9 +436,9 @@ public class ProjectResourceTest {
                 actualTaskEntity.ifPresent(entity -> {
                     final TaskEntityWrapper actualTaskEntityWrapper = new TaskEntityWrapper(entity);
 
-                    assertEquals(taskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
-                    assertEquals(taskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
-                    assertEquals(taskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
+                    assertEquals(cacheTaskEntity.getTitle(), actualTaskEntityWrapper.getTitle());
+                    assertEquals(cacheTaskEntity.getDescription(), actualTaskEntityWrapper.getDescription());
+                    assertEquals(cacheTaskEntity.getStatus(), actualTaskEntityWrapper.getStatus());
                 });
             }
         }
@@ -448,6 +446,8 @@ public class ProjectResourceTest {
         @Nested
         @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
         public class TaskServiceTest {
+
+            private static TaskEntityWrapper cacheTaskEntity;
 
             @Mock
             private IRepository<UserEntity> userRepository;
@@ -508,7 +508,7 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
-                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).toEntity();
+                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "hashed-password", UserRole.USER).toEntity();
                 final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
                 final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).toEntity();
 
@@ -524,7 +524,11 @@ public class ProjectResourceTest {
                 when(projectRepository.get(taskDTO.getProjectId())).thenReturn(Optional.of(projectEntity));
                 when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
                 when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
-                when(taskRepository.post(any(TaskEntity.class))).thenReturn(1);
+                when(taskRepository.post(any(TaskEntity.class))).then(invocation -> {
+                    cacheTaskEntity = new TaskEntityWrapper(invocation.getArgument(0));
+                    cacheTaskEntity.setId(1);
+                    return 1;
+                });
 
                 final Optional<TaskDTO> actualTaskDTO = taskService.create(taskDTO.dto());
 
@@ -540,34 +544,29 @@ public class ProjectResourceTest {
             public void testUpdate() {
                 final int taskId = 1;
 
-                final UserEntity userEntity = UserFactory.createUserEntity(2, "sensei", "password", UserRole.USER).toEntity();
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
-                final StatusEntity statusEntity = StatusFactory.createStatusEntity(2, "done", projectEntity).toEntity();
-                final TaskEntity taskEntity = TaskFactory.createTaskEntity()
-                        .setId(1)
-                        .setTitle("new task")
-                        .setDescription("task description")
-                        .setStartDate(LocalDateTime.now())
-                        .setEndDate(LocalDateTime.now().plusMinutes(10))
-                        .setStatus(statusEntity)
-                        .setProject(projectEntity)
-                        .setAssigner(userEntity)
-                        .toEntity();
+                final UserEntity userEntity = UserFactory.createUserEntity(2, "sensei", "hashed-password", UserRole.USER).toEntity();
+                final StatusEntity statusEntity = StatusFactory.createStatusEntity(2, "done", cacheTaskEntity.getProject().entity()).toEntity();
 
-                final TaskDTOWrapper taskDTO = TaskFactory.createTaskDTO()
-                        .setTitle("new task")
-                        .setStatus("done")
-                        .setAssignerId(2)
+                cacheTaskEntity = TaskFactory.createTaskEntity(cacheTaskEntity)
+                        .setTitle("updated task")
+                        .setStatus(statusEntity)
+                        .setAssigner(userEntity)
                         .build();
 
-                when(userRepository.get(taskDTO.getAssignerId())).thenReturn(Optional.of(userEntity));
-                when(statusRepository.get(taskDTO.getStatus())).thenReturn(Optional.of(statusEntity));
-                when(taskRepository.put(eq(taskId), any(TaskEntity.class))).thenReturn(Optional.of(taskEntity));
+                final TaskDTO taskDTO = TaskFactory.createTaskDTO()
+                        .setTitle("updated task")
+                        .setStatus("done")
+                        .setAssignerId(2)
+                        .toDTO();
 
-                final Optional<TaskDTO> actualTaskDTO = taskService.update(taskId, taskDTO.dto());
+                when(userRepository.get(cacheTaskEntity.getAssigner().getId())).thenReturn(Optional.of(userEntity));
+                when(statusRepository.get(cacheTaskEntity.getStatus().getName())).thenReturn(Optional.of(statusEntity));
+                when(taskRepository.put(eq(taskId), any(TaskEntity.class))).thenReturn(Optional.of(cacheTaskEntity.entity()));
 
-                verify(userRepository, times(1)).get(taskDTO.getAssignerId());
-                verify(statusRepository, times(1)).get(taskDTO.getStatus());
+                final Optional<TaskDTO> actualTaskDTO = taskService.update(taskId, taskDTO);
+
+                verify(userRepository, times(1)).get(cacheTaskEntity.getAssigner().getId());
+                verify(statusRepository, times(1)).get(cacheTaskEntity.getStatus().getName());
                 verify(taskRepository, times(1)).put(eq(taskId), any(TaskEntity.class));
                 assertTrue(actualTaskDTO.isPresent());
             }
@@ -577,21 +576,7 @@ public class ProjectResourceTest {
             public void testRemove() {
                 final int taskId = 1;
 
-                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "password", UserRole.USER).toEntity();
-                final ProjectEntity projectEntity = ProjectFactory.createProjectEntity(1, "project", List.of(userEntity)).toEntity();
-                final StatusEntity statusEntity = StatusFactory.createStatusEntity(1, "todo", projectEntity).toEntity();
-                final TaskEntity taskEntity = TaskFactory.createTaskEntity()
-                        .setId(1)
-                        .setTitle("task")
-                        .setDescription("task description")
-                        .setStartDate(LocalDateTime.now())
-                        .setEndDate(LocalDateTime.now().plusMinutes(10))
-                        .setStatus(statusEntity)
-                        .setProject(projectEntity)
-                        .setAssigner(userEntity)
-                        .toEntity();
-
-                when(taskRepository.delete(taskId)).thenReturn(Optional.of(taskEntity));
+                when(taskRepository.delete(taskId)).thenReturn(Optional.of(cacheTaskEntity.entity()));
 
                 final boolean actualResult = taskService.remove(taskId);
 

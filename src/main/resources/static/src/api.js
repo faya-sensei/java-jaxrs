@@ -34,16 +34,52 @@
 
 export const BASE_URL = new URL(globalThis.config.uri).origin;
 
+export const TOKEN_KEY = "auth-token";
+
 export const API = {
     auth: `${BASE_URL}/api/auth`,
     project: `${BASE_URL}/api/project`
 }
 
 /**
+ * verify the auth token and retrieve new auth token.
+ *
+ * @returns {Promise<UserDTO|null>} The details of the user.
+ */
+export async function verify() {
+    if (!localStorage.getItem(TOKEN_KEY)) return null;
+
+    try {
+        const response = await fetch(API.auth, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+            }
+        });
+
+        if (response.ok) {
+            const { token, ...details } = await response.json();
+
+            localStorage.setItem(TOKEN_KEY, token);
+
+            return details;
+        } else {
+            console.error(`Verification failed status: ${response.status}.`);
+        }
+    } catch (error) {
+        console.log("Failed to verify auth token.", error);
+    }
+
+    localStorage.removeItem(TOKEN_KEY);
+    return null;
+}
+
+/**
  * Login user account and retrieve auth token.
  *
  * @param {UserDTO} user The login payload.
- * @returns {Promise<UserDTO>} The details of the user.
+ * @returns {Promise<UserDTO|null>} The details of the user.
  */
 export async function login(user) {
     try {
@@ -55,21 +91,27 @@ export async function login(user) {
             body: JSON.stringify(user)
         });
 
-        const { token, ...details } = await response.json();
+        if (!response.ok) {
+            console.error(`Login failed status: ${response.status}.`);
+        } else {
+            const { token, ...details } = await response.json();
 
-        localStorage.setItem("auth-token", token);
+            localStorage.setItem(TOKEN_KEY, token);
 
-        return details;
+            return details;
+        }
     } catch (error) {
-        console.log(error);
+        console.log("Failed to login user account.", error);
     }
+
+    return null;
 }
 
 /**
  * Register user account and retrieve auth token.
  *
  * @param {UserDTO} user The register payload.
- * @returns {Promise<UserDTO>} The details of the user.
+ * @returns {Promise<UserDTO|null>} The details of the user.
  */
 export async function register(user) {
     try {
@@ -81,14 +123,20 @@ export async function register(user) {
             body: JSON.stringify(user)
         });
 
-        const { token, ...details } = await response.json();
+        if (response.ok) {
+            const { token, ...details } = await response.json();
 
-        localStorage.setItem("auth-token", token);
+            localStorage.setItem(TOKEN_KEY, token);
 
-        return details;
+            return details;
+        } else {
+            console.error(`Registration failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.log(error);
+        console.log("Failed to register user account.", error);
     }
+
+    return null;
 }
 
 /**
@@ -102,21 +150,27 @@ export async function getAllProjects() {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             }
         });
 
-        return await response.json();
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Fetching projects failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.log(error);
+        console.log("Failed to get all projects.", error);
     }
+
+    return [];
 }
 
 /**
  * Get the target project based on id.
  *
  * @param {number} id The id of the project.
- * @returns {Promise<ProjectDTO>} The details of the project.
+ * @returns {Promise<ProjectDTO|null>} The details of the project.
  */
 export async function getProject(id) {
     try {
@@ -124,21 +178,27 @@ export async function getProject(id) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             }
         });
 
-        return await response.json();
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Fetching project failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.log(error);
+        console.log("Failed to get project.", error);
     }
+
+    return null;
 }
 
 /**
  * Create one project.
  *
  * @param {ProjectDTO} project The creation payload.
- * @returns {Promise<ProjectDTO>} The details of the project.
+ * @returns {Promise<ProjectDTO|null>} The details of the project.
  */
 export async function saveProject(project) {
     try {
@@ -146,43 +206,28 @@ export async function saveProject(project) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             },
             body: JSON.stringify(project)
         });
 
-        return await response.json();
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Saving project failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.log(error);
+        console.log("Failed to save project.", error);
     }
-}
 
-/**
- * Get all tasks.
- *
- * @returns {Promise<TaskDTO[]>}
- */
-export async function getAllTasks() {
-    try {
-        const response = await fetch(`${API.project}/tasks`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
-            }
-        });
-
-        return await response.json();
-    } catch (error) {
-        console.error(error);
-    }
+    return null;
 }
 
 /**
  * Get the target tasks based on id.
  *
  * @param {number} id The id of the task.
- * @returns {Promise<TaskDTO>} The details of the task.
+ * @returns {Promise<TaskDTO|null>} The details of the task.
  */
 export async function getTask(id) {
     try {
@@ -190,21 +235,27 @@ export async function getTask(id) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             }
         });
 
-        return await response.json();
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Fetching task failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.error(error);
+        console.error("Failed to get task.", error);
     }
+
+    return null;
 }
 
 /**
  * Create or update one task.
  *
  * @param {TaskDTO} task The task to save.
- * @returns {Promise<TaskDTO>} The details of the task.
+ * @returns {Promise<TaskDTO|null>} The details of the task.
  */
 export async function saveTask(task) {
     try {
@@ -212,13 +263,19 @@ export async function saveTask(task) {
             method: task.id ? "PUT" : "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("auth-token")}`
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             },
             body: JSON.stringify(task),
         });
 
-        return await response.json();
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Saving task failed status: ${response.status}`);
+        }
     } catch (error) {
-        console.error(error);
+        console.error("Failed to save task.", error);
     }
+
+    return null;
 }

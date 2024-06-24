@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
 import jakarta.ws.rs.SeBootstrap;
+import org.faya.sensei.middlewares.JWTAuthFilter;
 import org.faya.sensei.repositories.IRepository;
 import org.faya.sensei.services.IAuthService;
 import org.faya.sensei.services.IService;
@@ -104,6 +105,7 @@ public class App {
 
     public static SeBootstrap.Instance startServer(Map<String, String> properties) {
         ResourceConfig resourceConfig = ResourceConfig.forApplication(new JaxRsApplication());
+        resourceConfig.register(JWTAuthFilter.class);
         resourceConfig.register(new AbstractBinder() {
 
             @Override

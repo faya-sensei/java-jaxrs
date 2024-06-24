@@ -10,7 +10,7 @@ public final class ProjectDTO {
 
     private String name;
 
-    private Integer ownerId;
+    private List<Integer> ownerIds;
 
     private List<TaskDTO> tasks;
 

@@ -1,8 +1,9 @@
-INSERT INTO users (name, password, role) VALUES ('admin', '', 'ADMIN');
+-- The password 'admin' is hashed using SHA-256.
+INSERT INTO users (name, password, role) VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'ADMIN');
 
 INSERT INTO projects (name) VALUES ('Project 1');
 
-INSERT INTO user_project VALUES (1, 1);
+INSERT INTO projects_users (project_id, user_id) VALUES (1, 1);
 
 INSERT INTO statuses (name, project_id)
 VALUES

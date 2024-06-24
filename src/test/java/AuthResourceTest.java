@@ -1,4 +1,5 @@
 import factories.ServerFactory;
+import factories.TaskFactory;
 import factories.UserFactory;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -16,6 +17,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.faya.sensei.entities.UserEntity;
 import org.faya.sensei.entities.UserRole;
+import org.faya.sensei.payloads.TaskDTO;
 import org.faya.sensei.payloads.UserDTO;
 import org.faya.sensei.payloads.UserPrincipal;
 import org.faya.sensei.repositories.IRepository;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reflections.Reflections;
+import wrappers.TaskDTOWrapper;
 import wrappers.UserDTOWrapper;
 import wrappers.UserEntityWrapper;
 
@@ -66,7 +69,7 @@ public class AuthResourceTest {
 
             private static IRepository<UserEntity> userRepository;
 
-            private static UserEntityWrapper userEntity;
+            private static UserEntityWrapper cacheUserEntity;
 
             private static int targetId = -1;
 
@@ -94,7 +97,7 @@ public class AuthResourceTest {
                                 new ClassNotFoundException("No implementation found for IRepository<UserEntity>"));
 
                 userRepository = userRepositoryClass.getDeclaredConstructor().newInstance();
-                userEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
+                cacheUserEntity = UserFactory.createUserEntity("user", "password", UserRole.ADMIN).build();
 
                 final Field userRepositoryField = userRepositoryClass.getDeclaredField("entityManager");
                 userRepositoryField.setAccessible(true);
@@ -104,7 +107,7 @@ public class AuthResourceTest {
             @Test
             @Order(1)
             public void testPost() {
-                targetId = userRepository.post(userEntity.entity());
+                targetId = userRepository.post(cacheUserEntity.entity());
 
                 assertTrue(targetId > 0);
             }
@@ -119,8 +122,56 @@ public class AuthResourceTest {
                     final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(entity);
 
                     assertTrue(actualUserEntityWrapper.getId() > 0);
-                    assertEquals(userEntity.getName(), actualUserEntityWrapper.getName());
-                    assertEquals(userEntity.getRole(), actualUserEntityWrapper.getRole());
+                    assertEquals(cacheUserEntity.getName(), actualUserEntityWrapper.getName());
+                    assertEquals(cacheUserEntity.getRole(), actualUserEntityWrapper.getRole());
+                });
+            }
+
+            @Test
+            @Order(3)
+            public void testGetByKey() {
+                final Optional<UserEntity> actualUserEntity = userRepository.get(cacheUserEntity.getName());
+
+                assertTrue(actualUserEntity.isPresent());
+                actualUserEntity.ifPresent(entity -> {
+                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(entity);
+
+                    assertTrue(actualUserEntityWrapper.getId() > 0);
+                    assertEquals(cacheUserEntity.getName(), actualUserEntityWrapper.getName());
+                    assertEquals(cacheUserEntity.getRole(), actualUserEntityWrapper.getRole());
+                });
+            }
+
+            @Test
+            @Order(4)
+            public void testPut() {
+                cacheUserEntity = UserFactory.createUserEntity(cacheUserEntity).setName("updated name").build();
+
+                final Optional<UserEntity> actualUserEntity = userRepository.put(targetId,
+                        UserFactory.createUserEntity().setName(cacheUserEntity.getName()).toEntity());
+
+                assertTrue(actualUserEntity.isPresent());
+                actualUserEntity.ifPresent(entity -> {
+                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(entity);
+
+                    assertTrue(actualUserEntityWrapper.getId() > 0);
+                    assertEquals(cacheUserEntity.getName(), actualUserEntityWrapper.getName());
+                    assertEquals(cacheUserEntity.getRole(), actualUserEntityWrapper.getRole());
+                });
+            }
+
+            @Test
+            @Order(5)
+            public void testDelete() {
+                final Optional<UserEntity> actualUserEntity = userRepository.delete(targetId);
+
+                assertTrue(actualUserEntity.isPresent());
+                actualUserEntity.ifPresent(entity -> {
+                    final UserEntityWrapper actualUserEntityWrapper = new UserEntityWrapper(entity);
+
+                    assertTrue(actualUserEntityWrapper.getId() > 0);
+                    assertEquals(cacheUserEntity.getName(), actualUserEntityWrapper.getName());
+                    assertEquals(cacheUserEntity.getRole(), actualUserEntityWrapper.getRole());
                 });
             }
         }
@@ -173,18 +224,35 @@ public class AuthResourceTest {
             @Test
             @Order(2)
             public void testLogin() {
-                final UserDTOWrapper userDTO = UserFactory.createUserDTO("user", "password").build();
+                final UserDTO userDTO = UserFactory.createUserDTO("user", "password").toDTO();
 
-                when(userRepository.get(userDTO.getName())).thenReturn(Optional.of(cacheUserEntity.entity()));
+                when(userRepository.get(cacheUserEntity.getName())).thenReturn(Optional.of(cacheUserEntity.entity()));
 
-                final Optional<UserDTO> actualUserDTO = authService.login(userDTO.dto());
+                final Optional<UserDTO> actualUserDTO = authService.login(userDTO);
 
-                verify(userRepository, times(1)).get(userDTO.getName());
+                verify(userRepository, times(1)).get(cacheUserEntity.getName());
                 assertTrue(actualUserDTO.isPresent());
             }
 
             @Test
             @Order(3)
+            public void testUpdate() {
+                final int userId = 1;
+
+                cacheUserEntity = UserFactory.createUserEntity(cacheUserEntity).setName("updated name").build();
+
+                final UserDTO userDTO = UserFactory.createUserDTO().setName(cacheUserEntity.getName()).toDTO();
+
+                when(userRepository.put(eq(userId), any(UserEntity.class))).thenReturn(Optional.of(cacheUserEntity.entity()));
+
+                final Optional<UserDTO> actualUserDTO = authService.update(userId, userDTO);
+
+                verify(userRepository, times(1)).put(eq(userId), any(UserEntity.class));
+                assertTrue(actualUserDTO.isPresent());
+            }
+
+            @Test
+            @Order(4)
             public void testResolveToken() {
                 final Optional<String> actualToken = authService.generateToken(1, Map.of("name", "user", "role", "USER"));
 
@@ -206,6 +274,8 @@ public class AuthResourceTest {
         private static final SeBootstrap.Instance instance = ServerFactory.createServer(entityManagerFactory);
 
         private static final URI uri = instance.configuration().baseUri();
+
+        private static String cacheToken;
 
         @Test
         @Order(1)
@@ -252,6 +322,30 @@ public class AuthResourceTest {
 
                         assertFalse(actualToken.isBlank());
                         assertEquals(loginUserBody.getJsonString("name").getString(), actualName);
+
+                        cacheToken = actualToken;
+                    }
+                }
+            }
+        }
+
+        @Test
+        @Order(3)
+        public void testVerify() {
+            try (final Client client = ClientBuilder.newClient()) {
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/auth").build());
+
+                try (final Response response = target.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
+                        .get()) {
+                    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+                    try (final JsonReader jsonReader = Json.createReader((InputStream) response.getEntity())) {
+                        final JsonObject actualJsonObject = jsonReader.readObject();
+
+                        final String actualToken = actualJsonObject.getString("token");
+
+                        assertFalse(actualToken.isBlank());
                     }
                 }
             }

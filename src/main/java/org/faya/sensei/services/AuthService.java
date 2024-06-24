@@ -34,6 +34,11 @@ public class AuthService implements IAuthService {
     }
 
     @Override
+    public Optional<UserDTO> get(String name) {
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<UserDTO> create(UserDTO dto) {
         return Optional.empty();
     }

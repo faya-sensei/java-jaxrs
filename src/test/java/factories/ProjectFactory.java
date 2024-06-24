@@ -19,12 +19,12 @@ public final class ProjectFactory {
         return new ProjectDTOBuilder(wrapper);
     }
 
-    public static ProjectDTOBuilder createProjectDTO(final String name, final int ownerId) {
-        return createProjectDTO().setName(name).setOwnerId(ownerId);
+    public static ProjectDTOBuilder createProjectDTO(final String name, final List<Integer> ownerIds) {
+        return createProjectDTO().setName(name).setOwnerIds(ownerIds);
     }
 
-    public static ProjectDTOBuilder createProjectDTO(final String name, final int ownerId, final List<TaskDTO> tasks) {
-        return createProjectDTO().setName(name).setOwnerId(ownerId).setTasks(tasks);
+    public static ProjectDTOBuilder createProjectDTO(final String name, final List<Integer> ownerIds, final List<TaskDTO> tasks) {
+        return createProjectDTO().setName(name).setOwnerIds(ownerIds).setTasks(tasks);
     }
 
     public static ProjectEntityBuilder createProjectEntity() {
@@ -65,8 +65,8 @@ public final class ProjectFactory {
             return this;
         }
 
-        public ProjectDTOBuilder setOwnerId(final int ownerId) {
-            wrapper.setOwnerId(ownerId);
+        public ProjectDTOBuilder setOwnerIds(final List<Integer> ownerIds) {
+            wrapper.setOwnerIds(ownerIds);
             return this;
         }
 

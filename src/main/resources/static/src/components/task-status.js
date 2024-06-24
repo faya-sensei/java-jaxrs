@@ -1,4 +1,3 @@
-import { TaskBoard } from "./task-board.js";
 import { TASK_EDITING, TASK_UPDATED } from "./task-event.js";
 
 const styleSheet = new CSSStyleSheet();
@@ -37,12 +36,12 @@ styleSheet.replaceSync`
 `;
 
 export class TaskStatus extends HTMLElement {
-    #eventManager = TaskBoard.eventManager;
     #elements = {};
     #data = {};
 
     constructor() {
         super();
+
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.adoptedStyleSheets = [styleSheet];
 
@@ -65,8 +64,8 @@ export class TaskStatus extends HTMLElement {
         this.#elements = { header, container, footer };
     }
 
-    get taskStatus() { return this.#data.taskStatus; }
-    set taskStatus(value) { this.#data.taskStatus = value; }
+    get taskStatus() { return this.#data.status; }
+    set taskStatus(value) { this.#data.status = value; }
 
     connectedCallback() {
         this.#elements.footer.addEventListener("click", this.handleCreate);
@@ -90,7 +89,9 @@ export class TaskStatus extends HTMLElement {
 
         const taskId = event.dataTransfer.getData("text");
         const rect = this.#elements.container.getBoundingClientRect();
-        this.#eventManager.dispatchEvent(new CustomEvent(TASK_UPDATED, {
+        this.dispatchEvent(new CustomEvent(TASK_UPDATED, {
+            bubbles: true,
+            composed: true,
             detail: {
                 position: {
                     x: event.clientX,
@@ -107,7 +108,9 @@ export class TaskStatus extends HTMLElement {
     }
 
     handleCreate() {
-        this.#eventManager.dispatchEvent(new CustomEvent(TASK_EDITING, {
+        this.dispatchEvent(new CustomEvent(TASK_EDITING, {
+            bubbles: true,
+            composed: true,
             detail: {
                 status: this.taskStatus
             }

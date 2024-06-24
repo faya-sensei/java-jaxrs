@@ -1,4 +1,3 @@
-import { TaskBoard } from "./task-board.js";
 import { TASK_CREATED, TASK_EDITING } from "./task-event.js";
 
 const styleSheet = new CSSStyleSheet();
@@ -47,6 +46,7 @@ button {
   padding: 0.5rem;
   border: none;
   border-radius: 4px;
+  
   cursor: pointer;
 
   &:first-of-type {
@@ -67,7 +67,6 @@ button {
 `;
 
 export class TaskForm extends HTMLElement {
-    #eventManager = TaskBoard.eventManager;
     #elements = {};
     #data = {};
 
@@ -108,42 +107,44 @@ export class TaskForm extends HTMLElement {
         this.#elements = { form, title, description, startDate, endDate, cancel, submit };
     }
 
-    get taskId() { return this.#data.taskId; }
-    set taskId(value) { this.#data.taskId = value; }
+    get taskId() { return this.#data.id; }
+    set taskId(value) { this.#data.id = value; }
 
-    get taskTitle() { return this.#data.taskTitle; }
-    set taskTitle(value) { this.#data.taskTitle = value; }
+    get taskTitle() { return this.#data.title; }
+    set taskTitle(value) { this.#data.title = value; }
 
-    get taskDescription() { return this.#data.taskDescription; }
-    set taskDescription(value) { this.#data.taskDescription = value; }
+    get taskDescription() { return this.#data.description; }
+    set taskDescription(value) { this.#data.description = value; }
 
-    get taskStartDate() { return this.#data.taskStartDate; }
-    set taskStartDate(value) { this.#data.taskStartDate = value; }
+    get taskStartDate() { return this.#data.startDate; }
+    set taskStartDate(value) { this.#data.startDate = value; }
 
-    get taskEndDate() { return this.#data.taskEndDate; }
-    set taskEndDate(value) { this.#data.taskEndDate = value; }
+    get taskEndDate() { return this.#data.endDate; }
+    set taskEndDate(value) { this.#data.endDate = value; }
 
-    get taskStatus() { return this.#data.taskStatus; }
-    set taskStatus(value) { this.#data.taskStatus = value; }
+    get taskStatus() { return this.#data.status; }
+    set taskStatus(value) { this.#data.status = value; }
 
     connectedCallback() {
-        this.#eventManager.addEventListener(TASK_EDITING, this.handleTaskEditing);
         this.#elements.form.addEventListener("submit", this.handleSubmit);
         this.#elements.cancel.addEventListener("click", this.handleCancel);
-        this.updateElements();
+        this.addEventListener(TASK_EDITING, this.handleTaskEditing);
     }
 
     disconnectedCallback() {
-        this.#eventManager.addEventListener(TASK_EDITING, this.handleTaskEditing);
         this.#elements.form.removeEventListener("submit", this.handleSubmit);
         this.#elements.cancel.removeEventListener("click", this.handleCancel);
+        this.addEventListener(TASK_EDITING, this.handleTaskEditing);
     }
 
     handleSubmit(event) {
         event.preventDefault();
 
         const data = new FormData(event.target);
-        this.#eventManager.dispatchEvent(new CustomEvent(TASK_CREATED, {
+
+        this.dispatchEvent(new CustomEvent(TASK_CREATED, {
+            bubbles: true,
+            composed: true,
             detail: {
                 status: this.taskStatus,
                 task: {
@@ -152,37 +153,35 @@ export class TaskForm extends HTMLElement {
                 }
             }
         }));
-        this.classList.remove("visible");
+
+        this.classList.toggle("visible", false);
     }
 
     handleCancel(event) {
         event.preventDefault();
 
-        this.classList.remove("visible");
-
+        this.classList.toggle("visible", false);
     }
 
     handleTaskEditing(event) {
         event.preventDefault();
 
-        const { id, title, description, startDate, endDate, status } = event.detail;
+        const { id, title, description, startDate, endDate, status } = { ...event.detail, ...this.#data };
 
-        this.taskId = id;
-        this.taskTitle = title;
-        this.taskDescription = description;
-        this.taskStartDate = startDate;
-        this.taskEndDate = endDate;
-        this.taskStatus = status;
-        this.classList.add("visible");
+        this.#data = { id, title, description, startDate, endDate, status };
+
+        this.updateElements();
+
+        this.classList.toggle("visible", true);
     }
 
     updateElements() {
         const { title, description, startDate, endDate } = this.#elements;
 
-        title.innerText = this.taskTitle;
-        description.innerText = this.taskDescription;
-        startDate.innerText = this.taskStartDate;
-        endDate.innerText = this.taskEndDate;
+        title.value = this.taskTitle;
+        description.value = this.taskDescription;
+        startDate.value = this.taskStartDate;
+        endDate.value = this.taskEndDate;
     }
 }
 

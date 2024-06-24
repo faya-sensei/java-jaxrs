@@ -34,20 +34,20 @@ export class TaskComponent extends HTMLElement {
         this.#elements = { title, description, startDate, endDate };
     }
 
-    get taskId() { return this.#data.taskId; }
-    set taskId(value) { this.#data.taskId = value; }
+    get taskId() { return this.#data.id; }
+    set taskId(value) { this.#data.id = value; }
 
-    get taskTitle() { return this.#data.taskTitle; }
-    set taskTitle(value) { this.#data.taskTitle = value; }
+    get taskTitle() { return this.#data.title; }
+    set taskTitle(value) { this.#data.title = value; }
 
-    get taskDescription() { return this.#data.taskDescription; }
-    set taskDescription(value) { this.#data.taskDescription = value; }
+    get taskDescription() { return this.#data.description; }
+    set taskDescription(value) { this.#data.description = value; }
 
-    get taskStartDate() { return this.#data.taskStartDate; }
-    set taskStartDate(value) { this.#data.taskStartDate = value; }
+    get taskStartDate() { return this.#data.startDate; }
+    set taskStartDate(value) { this.#data.startDate = value; }
 
-    get taskEndDate() { return this.#data.taskEndDate; }
-    set taskEndDate(value) { this.#data.taskEndDate = value; }
+    get taskEndDate() { return this.#data.endDate; }
+    set taskEndDate(value) { this.#data.endDate = value; }
 
     connectedCallback() {
         this.addEventListener("dragstart", this.handleDragStart);

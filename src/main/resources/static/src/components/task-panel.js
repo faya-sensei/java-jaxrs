@@ -1,18 +1,25 @@
-import { getAllTasks, saveTask } from "../api.js";
 import { TaskComponent } from "./task-component.js";
-import { TASK_CREATED, TASK_UPDATED } from "./task-event.js";
+import { TASK_CREATED, TASK_LOADING, TASK_UPDATED } from "./task-event.js";
 import { TaskStatus } from "./task-status.js";
 import { TaskForm } from "./task-form.js";
+import { saveTask } from "../api.js";
 
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
+:host {
+  display: none;
+}
+
+:host(.visible) {
+  display: block;
+}
+
 .container {
   display: flex;
 }
 `;
 
-export class TaskBoard extends HTMLElement {
-    static eventManager = new EventTarget();
+export class TaskPanel extends HTMLElement {
     /** @type {Map<String, TaskDTO[]>} */
     #taskStatuses = new Map();
     #elements = {};
@@ -20,6 +27,7 @@ export class TaskBoard extends HTMLElement {
 
     constructor() {
         super();
+
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.adoptedStyleSheets = [styleSheet];
 
@@ -28,35 +36,44 @@ export class TaskBoard extends HTMLElement {
 
         const modal = shadowRoot.appendChild(new TaskForm());
 
+        this.handleTaskLoading = this.handleTaskLoading.bind(this);
         this.handleTaskCreated = this.handleTaskCreated.bind(this);
         this.handleTaskUpdated = this.handleTaskUpdated.bind(this);
 
         this.#elements = { container, modal };
     }
 
-    get boardId() { return this.#data.boardId; }
-    set boardId(value) { this.#data.boardId = value; }
+    get projectId() { return this.#data.projectId; }
+    set projectId(value) { this.#data.projectId = value; }
 
     connectedCallback() {
-        TaskBoard.eventManager.addEventListener(TASK_CREATED, this.handleTaskCreated);
-        TaskBoard.eventManager.addEventListener(TASK_UPDATED, this.handleTaskUpdated);
-
-        getAllTasks().then(tasks => {
-            for (const task of tasks) {
-                if (this.#taskStatuses.has(task.status)) {
-                    this.#taskStatuses.set(task.status, [...this.#taskStatuses.get(task.status), task]);
-                } else {
-                    this.#taskStatuses.set(task.status, [task]);
-                }
-            }
-
-            this.updateElements();
-        });
+        this.addEventListener(TASK_LOADING, this.handleTaskLoading);
+        this.addEventListener(TASK_CREATED, this.handleTaskCreated);
+        this.addEventListener(TASK_UPDATED, this.handleTaskUpdated);
     }
 
     disconnectedCallback() {
-        TaskBoard.eventManager.removeEventListener(TASK_CREATED, this.handleTaskCreated);
-        TaskBoard.eventManager.removeEventListener(TASK_UPDATED, this.handleTaskUpdated);
+        this.removeEventListener(TASK_LOADING, this.handleTaskLoading)
+        this.removeEventListener(TASK_CREATED, this.handleTaskCreated);
+        this.removeEventListener(TASK_UPDATED, this.handleTaskUpdated);
+    }
+
+    handleTaskLoading(event) {
+        const { id, tasks } = event.detail;
+
+        this.projectId = id;
+
+        for (const task of tasks) {
+            if (this.#taskStatuses.has(task.status)) {
+                this.#taskStatuses.set(task.status, [...this.#taskStatuses.get(task.status), task]);
+            } else {
+                this.#taskStatuses.set(task.status, [task]);
+            }
+        }
+
+        this.updateElements();
+
+        this.classList.toggle("visible", true);
     }
 
     handleTaskCreated(event) {
@@ -64,7 +81,7 @@ export class TaskBoard extends HTMLElement {
 
         console.log(`[Task Component] Task: ${task.title} created under status: ${status}.`);
 
-        saveTask({ ...task, status, boardId: this.boardId }).then(task => {
+        saveTask({ ...task, status, projectId: this.projectId }).then(task => {
             if (this.#taskStatuses.has(status)) {
                 this.#taskStatuses.set(status, [...this.#taskStatuses.get(status), task]);
             } else {
@@ -106,7 +123,7 @@ export class TaskBoard extends HTMLElement {
 
         container.innerHTML = null;
 
-        for (let [status, tasks] of this.#taskStatuses) {
+        for (const [status, tasks] of this.#taskStatuses) {
             const statusElement = new TaskStatus();
             statusElement.taskStatus = status;
 
@@ -128,4 +145,4 @@ export class TaskBoard extends HTMLElement {
     }
 }
 
-customElements.define("task-board", TaskBoard);
+customElements.define("task-panel", TaskPanel);
