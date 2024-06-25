@@ -1,7 +1,7 @@
 - [The Introduction Of The JAX-RS](#introduction)
 - [Task Check List](#tasks)
   - [Implement a Heartbeat Endpoint](#1-implement-a-heartbeat-endpoint)
-  - [Implement Authorization and Authentication Endpoint](#2-implement-authorization-and-authentication-endpoint)
+  - [Implement Authorization and Authentication Endpoint](#2-implement-authorization-endpoint-and-authentication-middleware)
   - [Implement a Todo List Endpoint](#3-implement-a-todo-list-endpoint)
   - [Let's Design a Web Page](#3-lets-design-a-web-page)
   - [Make Server Data Flow](#4-make-server-data-flow)
@@ -94,23 +94,108 @@ Authorization and authentication are critical components in web services. JWT
 authentication. In this task, you will implement endpoints for user registration
 and login.
 
+### Procedural:
+
+1. **Implement the DTO**: Finalize the `UserDTO` class that serves as a **Data
+Transfer Object** for transferring user data. Ensure this class includes getter
+and setter methods for all fields to maintain proper encapsulation and access.
+Use JSON binding annotations to handle sensitive information, such as passwords,
+to ensure correct serialization and deserialization during client-server
+communication.
+
+2. **Implement the entity**: Finalize the `UserEntity` class and annotate it
+with JPA annotations to map it to the corresponding database table. Ensure
+getter, setter and constructor is implemented.
+
+3. **Implement the repository**: Define a repository class that implements
+IRepository to manage the persistence of `UserEntity`. This repository will
+handle basic CRUD operations, allowing the application to create, read, update,
+and delete user data in the database. 
+
+4. **Implement the service**: Finalize the `AuthService` class and implement the
+`IAuthService` and `IService` interfaces in a service class to handle the
+business logic, including tasks like password hashing and token creation. The
+service layer will act as a bridge between the resource and repository layers,
+ensuring that business rules are applied and data is processed correctly before
+being stored or returned.
+  -  Sample password hash by native java library:
+    ```java
+    private Optional<String> hashPassword(final String password) {
+        try {
+            byte[] hashedBytes = MessageDigest.getInstance("SHA-256")
+                    .digest(password.getBytes(StandardCharsets.UTF_8));
+
+            return Optional.of(IntStream.range(0, hashedBytes.length)
+                    .mapToObj(i -> String.format("%02x", hashedBytes[i]))
+                    .collect(Collectors.joining()));
+        } catch (NoSuchAlgorithmException e) {
+            return Optional.empty();
+        }
+    }
+    ```
+    While this example uses SHA-256 for hashing, it is recommended to use more
+    secure algorithms like Bcrypt or Argon2 for production environments.
+  - JWT Token Creation: Please refer to
+    [Java-JWT](https://github.com/auth0/java-jwt?tab=readme-ov-file#create-a-jwt)
+    for a detailed guide on creating and verifying JWT tokens.
+
+5. **Implement the resource**: Finalize the `AuthResource` class to define
+RESTful endpoints for user registration, login, and token verification. Use
+JAX-RS annotations to define these endpoints and specify their behaviors. Inject
+the service interface into this resource class to delegate business logic
+processing to the service layer. This setup ensures that the resource class
+focuses on handling HTTP requests and responses, while the service layer handles
+the underlying business logic.
+
 ### Requirement:
 
 #### Authorization
 
-* **Endpoint**: _**/api/auth/register**_ and _**/api/auth/login**_
+* **Endpoint**: _**/api/auth/register**_
 * **Method**: `POST`
-* * **Request**: JSON object containing user login or registration details, e.g.:
+* * **Request**: JSON object containing user registration details, e.g.:
 ```json
 {
-  "name": "foo",
-  "password": "bar"
+  "name": "sicusa",
+  "password": "sensei"
 }
 ```
-* **Response**: JSON object of the token, e.g.:
+* **Response**: JSON object of the user info and token, e.g.:
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaGVsbG8iOiJ3b3JsZCJ9.zfK3ZdyzfyVxXtoceMTnzD7VfhK30N0s0D8zoerVzL8"
+  "id": 1,
+  "name": "sicusa",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6InNpY3VzYSJ9.3g3Cuk9_45qOfgWNJfxc0VUAcBFKTPmT6H-Zz6SqL4w"
+}
+```
+
+* **Endpoint**: _**/api/auth/login**_
+* **Method**: `POST`
+* * **Request**: JSON object containing user login details, e.g.:
+```json
+{
+  "name": "sieluna",
+  "password": "sensei"
+}
+```
+* **Response**: JSON object of the user info and token, e.g.:
+
+```json
+{
+  "id": 2,
+  "name": "sieluna",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwibmFtZSI6InNpZWx1bmEifQ.AcGg2X8oysEOv0Oc8YxmASPAzNLtLPQENhxldfVXcwg"
+}
+```
+
+#### Authentication
+
+* **Endpoint**: _**/api/auth**_
+* **Method**: `GET`
+* **Response**: JSON object of a new refreshed token (and user info), e.g.:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwibmFtZSI6InNpZWx1bmEifQ.AcGg2X8oysEOv0Oc8YxmASPAzNLtLPQENhxldfVXcwg"
 }
 ```
 
@@ -118,6 +203,14 @@ and login.
 
 Implement `ContainerRequestFilter` and implement the `SecurityContext` and set 
 into `ContainerRequestContext`.
+
+<details>
+  <summary>Hint:</summary>
+  <ul>
+    <li>Use <code>@Path</code>, <code>@GET</code>, <code>@POST</code>, <code>@DELETE</code> annotations to define the endpoints and specify the response type.</li>
+    <li>Build up the entities relationship by <code>@Entity</code>, <code>@Id</code>, <code>@ManyToOne</code>, <code>@OneToMany</code> and <code>@ManyToMany</code>.</li>
+  </ul>
+</details>
 
 ## 3. Implement a Todo List Endpoint
 
@@ -134,115 +227,6 @@ and serialize classes into JSON refer to the official
 documentation in the
 **[Jakarta JSON Binding Tutorial](https://jakarta.ee/learn/docs/jakartaee-tutorial/current/web/jsonb/jsonb.html)**.
 Implement a minimal API following these guidelines.
-
-### Requirement:
-
-#### Get all Tasks
-
-* **Endpoint**: _**/api/todos**_
-* **Method**: `GET`
-* **Response**: JSON array of tasks from the database, e.g.:
-```json
-[
-  {
-    "id": 1,
-    "title": "Learn Java",
-    "description": "Java is a high-level, class-based, object-oriented programming language.",
-    "startDate": "1970-01-01T00:00:00Z",
-    "endDate": "1970-01-10T23:59:59Z",
-    "status": "Todo",
-    "boardId": 1,
-    "assignerId": 1
-  },
-  {
-    "id": 2,
-    "title": "Learn Rust",
-    "description": "Rust is the best programming language in the world.",
-    "startDate": "1970-01-01T00:00:00Z",
-    "endDate": "1970-01-10T23:59:59Z",
-    "status": "Done",
-    "boardId": 1,
-    "assignerId": 1
-  }
-]
-```
-
-#### Get one Task by ID
-
-* **Endpoint**: _**/api/todos/:id**_
-* **Method**: `GET`
-* **Response**: JSON object of the task with the specified ID, e.g.:
-```json
-{
-  "id": 1,
-  "title": "Learn Java",
-  "description": "Java is a high-level, class-based, object-oriented programming language.",
-  "startDate": "1970-01-01T00:00:00Z",
-  "endDate": "1970-01-10T23:59:59Z",
-  "status": "Todo",
-  "boardId": 1,
-  "assignerId": 1
-}
-```
-
-#### Save one task
-
-* **Endpoint**: _**/api/todos**_
-* **Method**: `POST`
-* **Request**: JSON object with new task details, e.g.:
-```json
-{
-  "title": "Learn Sleep",
-  "description": "zzz...",
-  "endDate": "1970-01-10T23:59:59Z",
-  "status": "Todo",
-  "boardId": 1,
-  "assignerId": 1
-}
-```
-* **Response**: JSON object of the newly created task, e.g.:
-```json
-{
-  "id": 3,
-  "title": "Learn Sleep",
-  "description": "zzz...",
-  "startDate": "1970-01-01T00:00:00Z",
-  "endDate": "1970-01-10T23:59:59Z",
-  "status": "Todo",
-  "boardId": 1,
-  "assignerId": 1
-}
-```
-
-#### Update one Task by ID
-
-* **Endpoint**: _**/api/todos/:id**_
-* **Method**: `PUT`
-* **Request**: JSON object with the fields to update, e.g.:
-```json
-{
-  "status": "Done"
-}
-```
-* **Response**: JSON object of the updated task, e.g.:
-```json
-{
-  "id": 3,
-  "title": "Learn Sleep",
-  "description": "zzz...",
-  "startDate": "1970-01-01T00:00:00Z",
-  "endDate": "1970-01-10T23:59:59Z",
-  "status": "Done",
-  "boardId": 1,
-  "assignerId": 1
-}
-```
-
-#### Remove one task by id
-
-* **Endpoint**: _**/api/todos/:id**_
-* **Method**: `DELETE`
-* **Response**: Status code indicating successful deletion.
 
 ### Procedural:
 
@@ -296,14 +280,149 @@ with lines.
 2. **Design the entity repository for CRUD operations**: Ensure that the N+1
 problem is avoided. Implement the todo list endpoint.
 
-<details>
-  <summary>Hint:</summary>
-  <ul>
-    <li>Use <code>@Path</code>, <code>@GET</code>, <code>@POST</code>, <code>@DELETE</code>, and <code>@Produces</code> annotations to define the endpoints and specify the response type.</li>
-    <li>Build up the entities relationship by <code>@Entity</code>, <code>@Id</code>, <code>@ManyToOne</code>, <code>@OneToMany</code> and <code>@ManyToMany</code>.</li>
-    <li>Implement the repositories logic to manage the entities.</li>
-  </ul>
-</details>
+### Requirement:
+
+#### Get all Projects
+
+* **Endpoint**: _**/api/project**_
+* **Method**: `GET`
+* **Response**: JSON array of projects from the database, e.g.
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Project 1",
+    "ownerIds": [1]
+  },
+  {
+    "id": 2,
+    "name": "Project 2",
+    "ownerIds": [1]
+  }
+]
+```
+
+#### Get one Project by ID
+
+* **Endpoint**: _**/api/project/:id**_
+* **Method**: `GET`
+* **Response**: JSON object of the project with the specified ID, e.g.:
+```json
+{
+  "id": 1,
+  "name": "Project 1",
+  "ownerIds": [1],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Task",
+      "description": "Task description",
+      "startDate": "1970-01-01T00:00:00Z",
+      "endDate": "1970-01-10T23:59:59Z",
+      "status": "Done",
+      "projectId": 1,
+      "assignerId": 1
+    }
+  ]
+}
+```
+
+#### Create a new Project
+
+* **Endpoint**: _**/api/project**_
+* **Method**: `POST`
+* **Request**: JSON object with new project details, e.g.:
+```json
+{
+  "name": "Project 3"
+}
+```
+* **Response**: JSON object of the newly created project, e.g.:
+```json
+{
+  "id": 3,
+  "name": "Project 3",
+  "ownerIds": [1]
+}
+```
+
+#### Get one Task by ID
+
+* **Endpoint**: _**/api/project/tasks/:id**_
+* **Method**: `GET`
+* **Response**: JSON object of the task with the specified ID, e.g.:
+```json
+{
+  "id": 1,
+  "title": "Learn Java",
+  "description": "Java is a high-level, class-based, object-oriented programming language.",
+  "startDate": "1970-01-01T00:00:00Z",
+  "endDate": "1970-01-10T23:59:59Z",
+  "status": "Todo",
+  "boardId": 1,
+  "assignerId": 1
+}
+```
+
+#### Save one task
+
+* **Endpoint**: _**/api/project/tasks**_
+* **Method**: `POST`
+* **Request**: JSON object with new task details, e.g.:
+```json
+{
+  "title": "Learn Sleep",
+  "description": "zzz...",
+  "endDate": "1970-01-10T23:59:59Z",
+  "status": "Todo",
+  "boardId": 1,
+  "assignerId": 1
+}
+```
+* **Response**: JSON object of the newly created task, e.g.:
+```json
+{
+  "id": 3,
+  "title": "Learn Sleep",
+  "description": "zzz...",
+  "startDate": "1970-01-01T00:00:00Z",
+  "endDate": "1970-01-10T23:59:59Z",
+  "status": "Todo",
+  "boardId": 1,
+  "assignerId": 1
+}
+```
+
+#### Update one Task by ID
+
+* **Endpoint**: _**/api/project/tasks/:id**_
+* **Method**: `PUT`
+* **Request**: JSON object with the fields to update, e.g.:
+```json
+{
+  "status": "Done"
+}
+```
+* **Response**: JSON object of the updated task, e.g.:
+```json
+{
+  "id": 3,
+  "title": "Learn Sleep",
+  "description": "zzz...",
+  "startDate": "1970-01-01T00:00:00Z",
+  "endDate": "1970-01-10T23:59:59Z",
+  "status": "Done",
+  "boardId": 1,
+  "assignerId": 1
+}
+```
+
+#### Remove one task by id
+
+* **Endpoint**: _**/api/project/tasks/:id**_
+* **Method**: `DELETE`
+* **Response**: Status code indicating successful deletion.
 
 ## 3. Let's Design a Web Page
 
@@ -320,10 +439,11 @@ different statuses seamlessly.
 
 * **Endpoint**: _**/**_
 * **Method**: `GET`
-* **Response**: An HTML page displaying the list of todos and a form to add new tasks.
-  - A table or list to display the current todo items.
-  - A form with an input field for adding new tasks.
-  - Include buttons for update or delete tasks.
+
+> [!IMPORTANT]  
+> This task is optional as it does not have a prerequisite for web development
+> skills. You can either create your own front-end implementation or use the
+> provided ready-made implementation.
 
 ## 4. Make Server Data Flow
 
