@@ -118,7 +118,7 @@ business logic, including tasks like password hashing and token creation. The
 service layer will act as a bridge between the resource and repository layers,
 ensuring that business rules are applied and data is processed correctly before
 being stored or returned.
-  -  Sample password hash by native java library:
+  - Sample password hash by native java library:
     ```java
     private Optional<String> hashPassword(final String password) {
         try {
