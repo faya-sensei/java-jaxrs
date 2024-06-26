@@ -449,5 +449,22 @@ different statuses seamlessly.
 
 ### Instruction:
 
-In reality, a server often does not serve only one person, we need to make the
-data flow. 
+Server-Sent Events (SSE) and WebSockets are essential technologies in modern web
+applications. While REST APIs work well for many tasks, SSE and WebSockets are
+ideal for applications that need real-time updates, such as flight tracking, web
+camera and chat rooms. In this exercise, we will use SSE since it does not
+require two-way communication.
+
+### Procedural:
+
+1. **Singleton the SseBroadcaster**: Mark resource or service as Singleton.
+
+2. **Register sink and broadcast message**: Each client is a **SseEventSink**,
+The **SseBroadcaster** required to distribute event to all client. refer to:
+[Jakarta SSE Tutorial](https://jakarta.ee/learn/docs/jakartaee-tutorial/current/websvcs/jaxrs-client/jaxrs-client003.html#_using_server_sent_events)
+
+### Details:
+
+* **Endpoint**: _**/api/project/tasks**_
+* **Method**: `GET`
+* **Response**: JSON object with the fields to update by SSE data flow.

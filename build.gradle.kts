@@ -26,7 +26,8 @@ dependencies {
     implementation("org.glassfish.jersey.inject:jersey-hk2")
     implementation("org.glassfish.jersey.media:jersey-media-json-binding")
     implementation("org.glassfish.jersey.media:jersey-media-json-processing")
-    implementation("org.glassfish.jersey.containers:jersey-container-jdk-http")
+    implementation("org.glassfish.jersey.media:jersey-media-sse")
+    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http")
 
     // Reflection
     implementation("org.reflections:reflections:0.10.+")

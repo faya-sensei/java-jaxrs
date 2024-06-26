@@ -15,6 +15,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.sse.SseEventSource;
 import org.faya.sensei.entities.*;
 import org.faya.sensei.payloads.ProjectDTO;
 import org.faya.sensei.payloads.TaskDTO;
@@ -37,6 +38,10 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -760,6 +765,47 @@ public class ProjectResourceTest {
 
         @Test
         @Order(4)
+        public void testGetTask() {
+            final LinkedBlockingDeque<String> events = new LinkedBlockingDeque<>();
+
+            try (final Client client = ClientBuilder.newClient()) {
+                final WebTarget target = client.target(UriBuilder.fromUri(uri).path("/api/project/tasks").build());
+                final SseEventSource eventSource = SseEventSource.target(target).build();
+                eventSource.register(inboundSseEvent -> {
+                    final String eventData = inboundSseEvent.readData();
+                    events.offer(eventData);
+                });
+                eventSource.open();
+
+                assertTrue(eventSource.isOpen());
+
+                final JsonObject creationTaskBody = Json.createObjectBuilder()
+                        .add("title", "new sse task")
+                        .add("description", "new sse task description.")
+                        .add("startDate", LocalDateTime.now().toString())
+                        .add("endDate", LocalDateTime.now().plusMinutes(5).toString())
+                        .add("status", StatusEntities.getFirst().getName())
+                        .add("projectId", 1)
+                        .add("assignerId", 1)
+                        .build();
+
+                final WebTarget createTarget = client.target(UriBuilder.fromUri(uri).path("/api/project/tasks").build());
+                try (final Response response = createTarget.request(MediaType.APPLICATION_JSON)
+                        .header("Authorization", String.format("Bearer %s", cacheToken))
+                        .post(Entity.entity(creationTaskBody, MediaType.APPLICATION_JSON))) {
+                    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+                }
+
+                String createEvent = events.poll(1, TimeUnit.SECONDS);
+                assertNotNull(createEvent);
+                assertTrue(createEvent.contains("\"title\":\"new sse task\""));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Test
+        @Order(5)
         public void testSaveTask() {
             final JsonObject creationTaskBody = Json.createObjectBuilder()
                     .add("title", "new test task")
@@ -799,7 +845,7 @@ public class ProjectResourceTest {
         }
 
         @Test
-        @Order(5)
+        @Order(6)
         public void testUpdateTask() {
             final TaskEntityWrapper targetTaskEntity = taskEntities.getFirst();
             final JsonObject updateTaskBody = Json.createObjectBuilder()
