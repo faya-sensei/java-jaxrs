@@ -3,8 +3,8 @@
   - [Implement a Heartbeat Endpoint](#1-implement-a-heartbeat-endpoint)
   - [Implement Authorization and Authentication Endpoint](#2-implement-authorization-endpoint-and-authentication-middleware)
   - [Implement a Todo List Endpoint](#3-implement-a-todo-list-endpoint)
-  - [Let's Design a Web Page](#3-lets-design-a-web-page)
-  - [Make Server Data Flow](#4-make-server-data-flow)
+  - [Let's Design a Web Page](#4-lets-design-a-web-page)
+  - [Make Server Data Flow](#5-make-server-data-flow)
 
 # Introduction
 
@@ -424,7 +424,7 @@ problem is avoided. Implement the todo list endpoint.
 * **Method**: `DELETE`
 * **Response**: Status code indicating successful deletion.
 
-## 3. Let's Design a Web Page
+## 4. Let's Design a Web Page
 
 ### Instruction:
 
@@ -445,7 +445,7 @@ different statuses seamlessly.
 > skills. You can either create your own front-end implementation or use the
 > provided ready-made implementation.
 
-## 4. Make Server Data Flow
+## 5. Make Server Data Flow
 
 ### Instruction:
 
@@ -453,15 +453,20 @@ Server-Sent Events (SSE) and WebSockets are essential technologies in modern web
 applications. While REST APIs work well for many tasks, SSE and WebSockets are
 ideal for applications that need real-time updates, such as flight tracking, web
 camera and chat rooms. In this exercise, we will use SSE since it does not
-require two-way communication.
+require two-way communication and refer to the office document
+[Jakarta SSE Tutorial](https://jakarta.ee/learn/docs/jakartaee-tutorial/current/websvcs/jaxrs-client/jaxrs-client003.html#_using_server_sent_events).
 
 ### Procedural:
 
-1. **Singleton the SseBroadcaster**: Mark resource or service as Singleton.
+1. **Singleton the SseBroadcaster**: Mark resource or service as `Singleton`.
 
-2. **Register sink and broadcast message**: Each client is a **SseEventSink**,
-The **SseBroadcaster** required to distribute event to all client. refer to:
-[Jakarta SSE Tutorial](https://jakarta.ee/learn/docs/jakartaee-tutorial/current/websvcs/jaxrs-client/jaxrs-client003.html#_using_server_sent_events)
+2. **Register Clients with SseEventSink:**: Each client will be represented by
+an SseEventSink. When a client connects, register its `SseEventSink` with the
+`SseBroadcaster` to start receiving events.
+
+3. **Broadcast Messages to Clients**: Call broadcast method on the
+`SseBroadcaster` in service or resource to distribute messages to all registered
+clients.
 
 ### Details:
 
