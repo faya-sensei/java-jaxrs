@@ -1,8 +1,7 @@
 import { TaskComponent } from "./task-component.js";
 import { TASK_CREATED, TASK_LOADING, TASK_UPDATED } from "./task-event.js";
 import { TaskStatus } from "./task-status.js";
-import { TaskForm } from "./task-form.js";
-import { saveTask } from "../api.js";
+import { saveTask, updateTask } from "../api.js";
 
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
@@ -34,13 +33,11 @@ export class TaskPanel extends HTMLElement {
         const container = shadowRoot.appendChild(document.createElement("div"));
         container.className = "container";
 
-        const modal = shadowRoot.appendChild(new TaskForm());
-
         this.handleTaskLoading = this.handleTaskLoading.bind(this);
         this.handleTaskCreated = this.handleTaskCreated.bind(this);
         this.handleTaskUpdated = this.handleTaskUpdated.bind(this);
 
-        this.#elements = { container, modal };
+        this.#elements = { container };
     }
 
     get projectId() { return this.#data.projectId; }
@@ -104,17 +101,16 @@ export class TaskPanel extends HTMLElement {
             this.#taskStatuses.set(status, tasks.filter(task => task.id !== id));
 
             if (previousStatus === status) {
-                saveTask({ id, ...payload }).then(task => {
+                updateTask({ id, ...payload }).then(task => {
                     this.#taskStatuses.get(previousStatus)[index] = task;
                 });
             } else {
                 this.#taskStatuses.set(status, tasks.filter(task => task.id !== id));
 
-                saveTask({ id, status }).then(task => {
+                updateTask({ id, status }).then(task => {
                     this.#taskStatuses.set(previousStatus, [...this.#taskStatuses.get(status), task]);
                 });
             }
-            break;
         }
     }
 
@@ -133,8 +129,8 @@ export class TaskPanel extends HTMLElement {
                     taskElement.taskId = task.id;
                     taskElement.taskTitle = task.title;
                     taskElement.taskDescription = task.description;
-                    taskElement.taskStartDate = task.startDate;
-                    taskElement.taskEndDate = task.endDate;
+                    taskElement.taskStartDate = new Date(task.startDate);
+                    taskElement.taskEndDate = new Date(task.endDate);
 
                     return taskElement;
                 })

@@ -1,4 +1,4 @@
-import { TASK_EDITING, TASK_UPDATED } from "./task-event.js";
+import { TASK_CREATED, TASK_EDITING, TASK_UPDATED } from "./task-event.js";
 
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
@@ -54,8 +54,10 @@ export class TaskStatus extends HTMLElement {
 
         const footer = shadowRoot.appendChild(document.createElement("div"));
         footer.className = "footer";
-        const createButton = footer.appendChild(document.createElement("span"));
-        createButton.innerText = "+ Add item";
+        const title = footer.appendChild(document.createElement("input"));
+        Object.assign(title, { id: "title", name: "title", type: "text", placeholder: "Start typing to create a draft" })
+        const create = footer.appendChild(document.createElement("span"));
+        create.innerText = "+ Add item";
 
         this.handleDragOver = this.handleDragOver.bind(this);
         this.handleDrop = this.handleDrop.bind(this);
@@ -87,7 +89,9 @@ export class TaskStatus extends HTMLElement {
     handleDrop(event) {
         event.preventDefault();
 
-        const taskId = event.dataTransfer.getData("text");
+        const taskId = Number(event.dataTransfer.getData("text"));
+        if (Number.isNaN(taskId)) return;
+
         const rect = this.#elements.container.getBoundingClientRect();
         this.dispatchEvent(new CustomEvent(TASK_UPDATED, {
             bubbles: true,
@@ -108,7 +112,7 @@ export class TaskStatus extends HTMLElement {
     }
 
     handleCreate() {
-        this.dispatchEvent(new CustomEvent(TASK_EDITING, {
+        this.dispatchEvent(new CustomEvent(TASK_CREATED, {
             bubbles: true,
             composed: true,
             detail: {

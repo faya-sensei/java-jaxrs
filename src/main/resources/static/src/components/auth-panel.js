@@ -7,8 +7,6 @@ styleSheet.replaceSync`
   display: none;
   max-width: 360px;
   margin: 0 auto;
-  padding: 16px;
-  border-radius: 8px;
 }
 
 :host(.visible) {
@@ -18,13 +16,19 @@ styleSheet.replaceSync`
 form {
   display: flex;
   flex-direction: column;
+  min-width: 260px;
 }
 
 input {
-  padding: 12px;
+  margin: 0.5rem 0.25rem;
+  padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-  margin: 8px 0 16px 0;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
 }
 
 .button-group {
@@ -34,16 +38,17 @@ input {
 
   & > button {
     flex: 1;
-    padding: 12px;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     color: white;
-    background: #1eb2d7;
+    background-color: #1eb2d7;
     transition: background 0.3s;
 
     &:hover {
-      background: #1d82b9;
+      background-color: #1d82b9;
     }
   }
 }
@@ -114,7 +119,11 @@ export class AuthPanel extends HTMLElement {
         delegates[event.submitter.dataset.name]?.(Object.fromEntries(data.entries()))
             .then(result => {
                 if (result) {
-                    this.dispatchEvent(new Event(AUTH_AUTHORIZED));
+                    this.dispatchEvent(new CustomEvent(AUTH_AUTHORIZED, {
+                        detail: {
+                            id: result.id
+                        }
+                    }));
 
                     this.classList.toggle("visible", false);
                 }

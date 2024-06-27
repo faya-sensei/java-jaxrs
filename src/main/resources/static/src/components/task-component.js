@@ -1,3 +1,5 @@
+import { TASK_UPDATED } from "./task-event.js";
+
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
 :host {
@@ -8,6 +10,11 @@ styleSheet.replaceSync`
   margin: 10px;
   background-color: white;
   cursor: move;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
 }
 `;
 
@@ -22,16 +29,35 @@ export class TaskComponent extends HTMLElement {
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.adoptedStyleSheets = [styleSheet];
 
-        const container = shadowRoot.appendChild(document.createElement("div"));
+        const form = shadowRoot.appendChild(document.createElement("form"));
 
-        const title = container.appendChild(document.createElement("div"));
-        const description = container.appendChild(document.createElement("div"));
-        const startDate = container.appendChild(document.createElement("div"));
-        const endDate = container.appendChild(document.createElement("div"));
+        const titleLabel = form.appendChild(document.createElement("label"));
+        Object.assign(titleLabel, { for: "title", innerText: "Title" });
+        const title = form.appendChild(document.createElement("input"));
+        Object.assign(title, { id: "title", name: "title", type: "text" });
+        const descriptionLabel = form.appendChild(document.createElement("label"));
+        Object.assign(descriptionLabel, { for: "description", innerText: "Description" });
+        const description = form.appendChild(document.createElement("input"));
+        Object.assign(description, { id: "description", name: "description", type: "text" });
+        const startDateLabel = form.appendChild(document.createElement("label"));
+        Object.assign(startDateLabel, { for: "startDate", innerText: "Start Date" });
+        const startDate = form.appendChild(document.createElement("input"));
+        Object.assign(startDate, { id: "startDate", name: "startDate", type: "datetime-local" });
+        const endDateLabel = form.appendChild(document.createElement("label"));
+        Object.assign(endDateLabel, { for: "endDate", innerText: "End Date" });
+        const endDate = form.appendChild(document.createElement("input"));
+        Object.assign(endDate, { id: "endDate", name: "endDate", type: "datetime-local" });
+
+        const cancel = form.appendChild(document.createElement("button"));
+        cancel.innerText = "Cancel";
+        const submit = form.appendChild(document.createElement("button"));
+        submit.innerText = "Save";
 
         this.handleDragStart = this.handleDragStart.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
 
-        this.#elements = { title, description, startDate, endDate };
+        this.#elements = { form, title, description, startDate, endDate, cancel, submit };
     }
 
     get taskId() { return this.#data.id; }
@@ -58,6 +84,27 @@ export class TaskComponent extends HTMLElement {
         this.removeEventListener("dragstart", this.handleDragStart);
     }
 
+    handleSubmit(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+
+        this.#data = { ...this.#data, ...Object.fromEntries(formData.entries()) };
+
+        this.dispatchEvent(new CustomEvent(TASK_UPDATED, {
+            bubbles: true,
+            composed: true,
+            detail: {
+                status: this.taskStatus,
+                task: this.#data
+            }
+        }));
+    }
+
+    handleCancel(event) {
+        event.preventDefault();
+    }
+
     handleDragStart(event) {
         event.dataTransfer.setData("text/plain", this.taskId);
     }
@@ -65,10 +112,11 @@ export class TaskComponent extends HTMLElement {
     updateElements() {
         const { title, description, startDate, endDate } = this.#elements;
 
-        title.innerText = this.taskTitle;
-        description.innerText = this.taskDescription;
-        startDate.innerText = this.taskStartDate;
-        endDate.innerText = this.taskEndDate;
+        title.value = this.taskTitle;
+        description.value = this.taskDescription;
+        // Format the date and time to 'YYYY-MM-DDTHH:MM'
+        startDate.value = this.taskStartDate?.toISOString().slice(0, 16);
+        endDate.value = this.taskEndDate?.toISOString().slice(0, 16);
     }
 }
 

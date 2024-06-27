@@ -1,5 +1,4 @@
 import factories.ServerFactory;
-import factories.TaskFactory;
 import factories.UserFactory;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -17,7 +16,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.faya.sensei.entities.UserEntity;
 import org.faya.sensei.entities.UserRole;
-import org.faya.sensei.payloads.TaskDTO;
 import org.faya.sensei.payloads.UserDTO;
 import org.faya.sensei.payloads.UserPrincipal;
 import org.faya.sensei.repositories.IRepository;
@@ -28,8 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reflections.Reflections;
-import wrappers.TaskDTOWrapper;
-import wrappers.UserDTOWrapper;
 import wrappers.UserEntityWrapper;
 
 import java.io.InputStream;

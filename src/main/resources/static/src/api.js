@@ -2,7 +2,8 @@
  * @typedef ProjectDTO Project data transfer object.
  * @property {number} [id] The id of the project.
  * @property {string} name The name of the project.
- * @property {TaskDTO[]} tasks The tasks of the project.
+ * @property {number[]} ownerIds The owner ids of the project.
+ * @property {TaskDTO[]} [tasks] The tasks of the project.
  */
 
 /**
@@ -224,43 +225,33 @@ export async function saveProject(project) {
 }
 
 /**
- * Get the target tasks based on id.
+ * Listen task changes.
  *
- * @param {number} id The id of the task.
- * @returns {Promise<TaskDTO|null>} The details of the task.
+ * @return {function(MessageEvent): void} listen callback.
+ * @return {EventSource} The event source.
  */
-export async function getTask(id) {
-    try {
-        const response = await fetch(`${API.project}/tasks/${id}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
-            }
-        });
+export function listenTask(callback) {
+    const eventSource = new EventSource(`${API.project}/tasks`);
 
-        if (response.ok) {
-            return await response.json();
-        } else {
-            console.error(`Fetching task failed status: ${response.status}`);
-        }
-    } catch (error) {
-        console.error("Failed to get task.", error);
-    }
+    eventSource.onmessage = callback;
 
-    return null;
+    eventSource.onerror = (err) => {
+        console.error(err);
+    };
+
+    return eventSource;
 }
 
 /**
- * Create or update one task.
+ * Create one task.
  *
  * @param {TaskDTO} task The task to save.
  * @returns {Promise<TaskDTO|null>} The details of the task.
  */
 export async function saveTask(task) {
     try {
-        const response = await fetch(`${API.project}/tasks/${task.id ?? ''}`, {
-            method: task.id ? "PUT" : "POST",
+        const response = await fetch(`${API.project}/tasks`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
@@ -275,6 +266,35 @@ export async function saveTask(task) {
         }
     } catch (error) {
         console.error("Failed to save task.", error);
+    }
+
+    return null;
+}
+
+/**
+ * update one task based on id.
+ *
+ * @param {TaskDTO} task The task to update.
+ * @returns {Promise<TaskDTO|null>} The details of the task.
+ */
+export async function updateTask(task) {
+    try {
+        const response = await fetch(`${API.project}/tasks/${task.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+            },
+            body: JSON.stringify(task),
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error(`Updating task failed status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("Failed to update task.", error);
     }
 
     return null;
