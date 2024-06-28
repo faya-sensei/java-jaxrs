@@ -227,7 +227,7 @@ export async function saveProject(project) {
 /**
  * Listen task changes.
  *
- * @return {function(MessageEvent): void} listen callback.
+ * @param {function(MessageEvent): void} callback listen callback.
  * @return {EventSource} The event source.
  */
 export function listenTask(callback) {
@@ -235,9 +235,7 @@ export function listenTask(callback) {
 
     eventSource.onmessage = callback;
 
-    eventSource.onerror = (err) => {
-        console.error(err);
-    };
+    eventSource.onerror = (err) => console.error("Failed to receive message.", err);
 
     return eventSource;
 }

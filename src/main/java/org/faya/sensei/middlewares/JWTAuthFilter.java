@@ -26,14 +26,14 @@ public class JWTAuthFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+        final String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer"))
             throw new NotAuthorizedException("Authorization header must be provided.");
 
-        String token = authorizationHeader.substring("Bearer".length()).trim();
+        final String token = authorizationHeader.substring("Bearer".length()).trim();
 
-        Optional<UserPrincipal> user = authService.resolveToken(token);
+        final Optional<UserPrincipal> user = authService.resolveToken(token);
         if (user.isPresent()) {
             requestContext.setSecurityContext(new SecurityContext() {
                 @Override

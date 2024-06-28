@@ -23,11 +23,8 @@ styleSheet.replaceSync`
   overflow: auto;
 }
 
-.footer {
-  font-weight: bold;
+form {
   padding: 0.75rem;
-  border: none;
-  cursor: pointer;
 
   &:hover {
     background-color: #d0d7de33;
@@ -52,32 +49,31 @@ export class TaskStatus extends HTMLElement {
         container.className = "container";
         container.appendChild(document.createElement("slot"));
 
-        const footer = shadowRoot.appendChild(document.createElement("div"));
-        footer.className = "footer";
-        const title = footer.appendChild(document.createElement("input"));
-        Object.assign(title, { id: "title", name: "title", type: "text", placeholder: "Start typing to create a draft" })
-        const create = footer.appendChild(document.createElement("span"));
-        create.innerText = "+ Add item";
+        const form = shadowRoot.appendChild(document.createElement("form"));
+        const title = form.appendChild(document.createElement("input"));
+        Object.assign(title, { id: "title", name: "title", type: "text", placeholder: "Start typing a draft" })
+        const create = form.appendChild(document.createElement("button"));
+        create.innerText = "+ Add";
 
+        this.handleSubmit = this.handleSubmit.bind(this);
         this.handleDragOver = this.handleDragOver.bind(this);
         this.handleDrop = this.handleDrop.bind(this);
-        this.handleCreate = this.handleCreate.bind(this);
 
-        this.#elements = { header, container, footer };
+        this.#elements = { header, container, form };
     }
 
     get taskStatus() { return this.#data.status; }
     set taskStatus(value) { this.#data.status = value; }
 
     connectedCallback() {
-        this.#elements.footer.addEventListener("click", this.handleCreate);
+        this.#elements.form.addEventListener("submit", this.handleSubmit);
         this.addEventListener("dragover", this.handleDragOver);
         this.addEventListener("drop", this.handleDrop);
         this.updateElements();
     }
 
     disconnectedCallback() {
-        this.#elements.footer.removeEventListener("click", this.handleCreate);
+        this.#elements.form.removeEventListener("submit", this.handleSubmit);
         this.removeEventListener("dragover", this.handleDragOver);
         this.removeEventListener("drop", this.handleDrop);
     }
@@ -111,12 +107,17 @@ export class TaskStatus extends HTMLElement {
         }));
     }
 
-    handleCreate() {
+    handleSubmit(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+
         this.dispatchEvent(new CustomEvent(TASK_CREATED, {
             bubbles: true,
             composed: true,
             detail: {
-                status: this.taskStatus
+                status: this.taskStatus,
+                task: Object.fromEntries(formData.entries())
             }
         }));
     }

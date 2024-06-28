@@ -38,7 +38,7 @@ export class TaskComponent extends HTMLElement {
         const descriptionLabel = form.appendChild(document.createElement("label"));
         Object.assign(descriptionLabel, { for: "description", innerText: "Description" });
         const description = form.appendChild(document.createElement("input"));
-        Object.assign(description, { id: "description", name: "description", type: "text" });
+        Object.assign(description, { id: "description", name: "description", type: "text", placeholder: "No description provided" });
         const startDateLabel = form.appendChild(document.createElement("label"));
         Object.assign(startDateLabel, { for: "startDate", innerText: "Start Date" });
         const startDate = form.appendChild(document.createElement("input"));
@@ -76,11 +76,15 @@ export class TaskComponent extends HTMLElement {
     set taskEndDate(value) { this.#data.endDate = value; }
 
     connectedCallback() {
+        this.#elements.form.addEventListener("submit", this.handleSubmit);
+        this.#elements.cancel.addEventListener("click", this.handleCancel);
         this.addEventListener("dragstart", this.handleDragStart);
         this.updateElements();
     }
 
     disconnectedCallback() {
+        this.#elements.form.removeEventListener("submit", this.handleSubmit);
+        this.#elements.cancel.removeEventListener("click", this.handleCancel);
         this.removeEventListener("dragstart", this.handleDragStart);
     }
 
@@ -89,7 +93,13 @@ export class TaskComponent extends HTMLElement {
 
         const formData = new FormData(event.target);
 
-        this.#data = { ...this.#data, ...Object.fromEntries(formData.entries()) };
+        this.#data = {
+            ...this.#data,
+            ...Object.fromEntries(
+                Object.entries(Object.fromEntries(formData.entries()))
+                    .filter(([k, v]) => !!k && !!v)
+            )
+        };
 
         this.dispatchEvent(new CustomEvent(TASK_UPDATED, {
             bubbles: true,
@@ -113,10 +123,10 @@ export class TaskComponent extends HTMLElement {
         const { title, description, startDate, endDate } = this.#elements;
 
         title.value = this.taskTitle;
-        description.value = this.taskDescription;
+        description.value = this.taskDescription ?? null;
         // Format the date and time to 'YYYY-MM-DDTHH:MM'
-        startDate.value = this.taskStartDate?.toISOString().slice(0, 16);
-        endDate.value = this.taskEndDate?.toISOString().slice(0, 16);
+        startDate.value = this.taskStartDate ? new Date(this.taskStartDate).toISOString().slice(0, 16) : null;
+        endDate.value = this.taskEndDate ? new Date(this.taskEndDate).toISOString().slice(0, 16) : null;
     }
 }
 

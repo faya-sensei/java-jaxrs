@@ -221,6 +221,9 @@ public class ProjectResourceTest {
             private static ProjectEntityWrapper cacheProjectEntity;
 
             @Mock
+            private IRepository<UserEntity> userRepository;
+
+            @Mock
             private IRepository<ProjectEntity> projectRepository;
 
             private IService<ProjectDTO> projectService;
@@ -250,6 +253,10 @@ public class ProjectResourceTest {
 
                 projectService = projectServiceClass.getDeclaredConstructor().newInstance();
 
+                final Field userRepositoryField = projectServiceClass.getDeclaredField("userRepository");
+                userRepositoryField.setAccessible(true);
+                userRepositoryField.set(projectService, userRepository);
+
                 final Field projectRepositoryField = projectServiceClass.getDeclaredField("projectRepository");
                 projectRepositoryField.setAccessible(true);
                 projectRepositoryField.set(projectService, projectRepository);
@@ -258,6 +265,8 @@ public class ProjectResourceTest {
             @Test
             @Order(1)
             public void testCreate() {
+                final UserEntity userEntity = UserFactory.createUserEntity(1, "user", "hashed-password", UserRole.USER).toEntity();
+
                 final ProjectDTO projectDTO = ProjectFactory.createProjectDTO("project", List.of(1)).toDTO();
 
                 when(projectRepository.post(any(ProjectEntity.class))).then(invocation -> {
@@ -265,6 +274,7 @@ public class ProjectResourceTest {
                     cacheProjectEntity.setId(1);
                     return 1;
                 });
+                when(userRepository.get(projectDTO.getOwnerIds().getFirst())).thenReturn(Optional.of(userEntity));
 
                 final Optional<ProjectDTO> actualProjectDTO = projectService.create(projectDTO);
 
@@ -306,7 +316,7 @@ public class ProjectResourceTest {
 
                 cacheProjectEntity = ProjectFactory.createProjectEntity(cacheProjectEntity).setName("updated project").build();
 
-                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO(cacheProjectEntity.getName(), List.of(1)).toDTO();
+                final ProjectDTO projectDTO = ProjectFactory.createProjectDTO(cacheProjectEntity.getName(), List.of()).toDTO();
 
                 when(projectRepository.put(eq(projectId), any(ProjectEntity.class))).thenReturn(Optional.of(cacheProjectEntity.entity()));
 
@@ -674,6 +684,7 @@ public class ProjectResourceTest {
         public void testSaveProject() {
             final JsonObject creationTaskBody = Json.createObjectBuilder()
                     .add("name", "new project")
+                    .add("ownerIds", Json.createArrayBuilder(List.of(1)))
                     .build();
 
             try (final Client client = ClientBuilder.newClient()) {

@@ -1,7 +1,7 @@
 import { TaskComponent } from "./task-component.js";
 import { TASK_CREATED, TASK_LOADING, TASK_UPDATED } from "./task-event.js";
 import { TaskStatus } from "./task-status.js";
-import { saveTask, updateTask } from "../api.js";
+import { listenTask, saveTask, updateTask } from "../api.js";
 
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
@@ -70,6 +70,8 @@ export class TaskPanel extends HTMLElement {
 
         this.updateElements();
 
+        listenTask(event => console.log(event));
+
         this.classList.toggle("visible", true);
     }
 
@@ -95,7 +97,7 @@ export class TaskPanel extends HTMLElement {
         console.log(`[Task Component] Task id: ${id} at status: ${status}.`, position);
 
         for (const [previousStatus, tasks] of this.#taskStatuses) {
-            const index = tasks.find(task => task.id === id);
+            const index = tasks.findIndex(task => task.id === id);
             if (index < 0) continue;
 
             this.#taskStatuses.set(status, tasks.filter(task => task.id !== id));
@@ -129,8 +131,8 @@ export class TaskPanel extends HTMLElement {
                     taskElement.taskId = task.id;
                     taskElement.taskTitle = task.title;
                     taskElement.taskDescription = task.description;
-                    taskElement.taskStartDate = new Date(task.startDate);
-                    taskElement.taskEndDate = new Date(task.endDate);
+                    taskElement.taskStartDate = task.startDate;
+                    taskElement.taskEndDate = task.endDate;
 
                     return taskElement;
                 })

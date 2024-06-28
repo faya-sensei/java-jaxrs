@@ -114,9 +114,9 @@ export class AuthPanel extends HTMLElement {
         event.preventDefault();
 
         const delegates = { "login": login, "register": register };
-        const data = new FormData(event.target);
+        const formData = new FormData(event.target);
 
-        delegates[event.submitter.dataset.name]?.(Object.fromEntries(data.entries()))
+        delegates[event.submitter.dataset.name]?.(Object.fromEntries(formData.entries()))
             .then(result => {
                 if (result) {
                     this.dispatchEvent(new CustomEvent(AUTH_AUTHORIZED, {
