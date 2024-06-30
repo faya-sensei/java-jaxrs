@@ -1,0 +1,56 @@
+name: Autograding Tests
+
+on: 
+  push:
+    branches:
+    - 'master'
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Test entity design
+      id: test-entity-design
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Test entity design
+        command: gradle test --tests 'EntityDesignTest'
+        timeout: 10
+    - name: Test heart beat feature
+      id: test-heart-beat-feature
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Test heart beat feature
+        command: gradle test --tests 'HeartBeatResourceTest'
+        timeout: 10
+    - name: Test auth feature
+      id: test-auth-feature
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Test auth feature
+        command: gradle test --tests 'AuthResourceTest'
+        timeout: 10
+    - name: Test project feature
+      id: test-project-feature
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Test project feature
+        command: gradle test --tests 'ProjectResourceTest'
+        timeout: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST-ENTITY-DESIGN_RESULTS: "${{steps.test-entity-design.outputs.result}}"
+        TEST-HEART-BEAT-FEATURE_RESULTS: "${{steps.test-heart-beat-feature.outputs.result}}"
+        TEST-AUTH-FEATURE_RESULTS: "${{steps.test-auth-feature.outputs.result}}"
+        TEST-PROJECT-FEATURE_RESULTS: "${{steps.test-project-feature.outputs.result}}"
+      with:
+        runners: test-entity-design,test-heart-beat-feature,test-auth-feature,test-project-feature
