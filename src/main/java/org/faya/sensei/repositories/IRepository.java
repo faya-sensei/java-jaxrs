@@ -30,7 +30,7 @@ public interface IRepository<T> {
      * @param key The unique key of the item.
      * @return The item.
      */
-    default Optional<T> get(final String key)  {
+    default Optional<T> get(final String key) {
         return Optional.empty();
     }
 
@@ -41,7 +41,7 @@ public interface IRepository<T> {
      * @param value The query value of the foreign key.
      * @return The collection of items.
      */
-    default Collection<T> getBy(final String key, final String value)  {
+    default Collection<T> getBy(final String key, final String value) {
         return List.of();
     }
 

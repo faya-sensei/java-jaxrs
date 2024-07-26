@@ -17,38 +17,38 @@ form {
   display: flex;
   flex-direction: column;
   min-width: 260px;
-}
 
-input {
-  margin: 0.5rem 0.25rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-  }
-}
-
-.button-group {
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-
-  & > button {
-    flex: 1;
-    margin: 0.5rem 0;
+  & > input {
+    margin: 0.5rem 0.25rem;
     padding: 0.5rem;
-    border: none;
+    border: 1px solid #ccc;
     border-radius: 6px;
-    cursor: pointer;
-    color: white;
-    background-color: #1eb2d7;
-    transition: background 0.3s;
+    outline: none;
 
-    &:hover {
-      background-color: #1d82b9;
+    &:focus {
+      border-color: #007bff;
+    }
+  }
+
+  & > .button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    & > button {
+      flex: 1;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: background 0.3s;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      background-color: #1eb2d7;
+
+      &:hover {
+        background-color: #1d82b9;
+      }
     }
   }
 }
@@ -66,13 +66,13 @@ export class AuthPanel extends HTMLElement {
         const form = shadowRoot.appendChild(document.createElement("form"));
 
         const nameLabel = form.appendChild(document.createElement("label"));
-        Object.assign(nameLabel, { for: "name", innerText: "Name" });
+        Object.assign(nameLabel, { for: "username", innerText: "Name" });
         const name = form.appendChild(document.createElement("input"));
-        Object.assign(name, { id: "name", name: "name", type: "text", placeholder: "Please enter your account", required: true });
+        Object.assign(name, { id: "username", name: "name", type: "text", placeholder: "Please enter your account", required: true });
         const passwordLabel = form.appendChild(document.createElement("label"));
         Object.assign(passwordLabel, { for: "password", innerText: "Password" });
         const password = form.appendChild(document.createElement("input"));
-        Object.assign(password, { id: "password", name: "password", type: "password", placeholder: "Please enter your password", required: true });
+        Object.assign(password, { id: "password", name: "password", type: "password", placeholder: "Please enter your password", autocomplete: "on", required: true });
 
         const buttonGroup = form.appendChild(document.createElement("div"));
         buttonGroup.className = "button-group";

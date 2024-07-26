@@ -19,7 +19,7 @@ styleSheet.replaceSync`
 `;
 
 export class TaskPanel extends HTMLElement {
-    /** @type {Map<String, TaskDTO[]>} */
+    /** @type {Map<String, {statusComponent: TaskStatus, statusData: Map<int, {taskData: TaskDTO, taskComponent: TaskComponent}>}>} */
     #taskStatuses = new Map();
     #elements = {};
     #data = {};
@@ -60,15 +60,7 @@ export class TaskPanel extends HTMLElement {
 
         this.projectId = id;
 
-        for (const task of tasks) {
-            if (this.#taskStatuses.has(task.status)) {
-                this.#taskStatuses.set(task.status, [...this.#taskStatuses.get(task.status), task]);
-            } else {
-                this.#taskStatuses.set(task.status, [task]);
-            }
-        }
-
-        this.updateElements();
+        for (const task of tasks) this.createTaskElement(task);
 
         listenTask(event => console.log(event));
 
@@ -80,15 +72,7 @@ export class TaskPanel extends HTMLElement {
 
         console.log(`[Task Component] Task: ${task.title} created under status: ${status}.`);
 
-        saveTask({ ...task, status, projectId: this.projectId }).then(task => {
-            if (this.#taskStatuses.has(status)) {
-                this.#taskStatuses.set(status, [...this.#taskStatuses.get(status), task]);
-            } else {
-                this.#taskStatuses.set(status, [task]);
-            }
-
-            this.updateElements();
-        });
+        saveTask({ ...task, status, projectId: this.projectId }).then(task => this.createTaskElement(task));
     }
 
     handleTaskUpdated(event) {
@@ -96,49 +80,59 @@ export class TaskPanel extends HTMLElement {
 
         console.log(`[Task Component] Task id: ${id} at status: ${status}.`, position);
 
-        for (const [previousStatus, tasks] of this.#taskStatuses) {
-            const index = tasks.findIndex(task => task.id === id);
-            if (index < 0) continue;
+        updateTask({ id, status, ...payload }).then(task => this.updateTaskElement(task));
+    }
 
-            this.#taskStatuses.set(status, tasks.filter(task => task.id !== id));
+    createTaskElement(task) {
+        const taskComponent = new TaskComponent();
+        taskComponent.taskId = task.id;
+        taskComponent.taskTitle = task.title;
+        taskComponent.taskDescription = task.description;
+        taskComponent.taskStartDate = task.startDate;
+        taskComponent.taskEndDate = task.endDate;
 
-            if (previousStatus === status) {
-                updateTask({ id, ...payload }).then(task => {
-                    this.#taskStatuses.get(previousStatus)[index] = task;
-                });
-            } else {
-                this.#taskStatuses.set(status, tasks.filter(task => task.id !== id));
+        const { statusComponent, statusData } = !this.#taskStatuses.has(task.status)
+            ? this.createStatusComponent(task.status)
+            : this.#taskStatuses.get(task.status);
 
-                updateTask({ id, status }).then(task => {
-                    this.#taskStatuses.set(previousStatus, [...this.#taskStatuses.get(status), task]);
-                });
-            }
+        if (!statusData.has(task.id)) {
+            statusComponent.append(taskComponent);
+            statusData.set(task.id, { taskComponent, taskData: task });
         }
     }
 
-    updateElements() {
-        const { container } = this.#elements;
+    createStatusComponent(status) {
+        const statusComponent = new TaskStatus();
+        statusComponent.taskStatus = status;
 
-        container.innerHTML = null;
+        const statusData = new Map();
 
-        for (const [status, tasks] of this.#taskStatuses) {
-            const statusElement = new TaskStatus();
-            statusElement.taskStatus = status;
+        this.#elements.container.append(statusComponent);
+        this.#taskStatuses.set(status, { statusComponent, statusData });
 
-            statusElement.append(
-                ...tasks.map(task => {
-                    const taskElement = new TaskComponent();
-                    taskElement.taskId = task.id;
-                    taskElement.taskTitle = task.title;
-                    taskElement.taskDescription = task.description;
-                    taskElement.taskStartDate = task.startDate;
-                    taskElement.taskEndDate = task.endDate;
+        return { statusComponent, statusData };
+    }
 
-                    return taskElement;
-                })
-            );
+    updateTaskElement(task) {
+        const currentStatus = [...this.#taskStatuses].find(([_, { statusData }]) => statusData.has(task.id))?.[1];
+        const currentTask = currentStatus?.statusData.get(task.id);
+        const nextStatus = this.#taskStatuses.get(task.status);
 
-            container.append(statusElement);
+        if (currentTask && currentStatus) {
+            currentStatus.statusData.set(task.id, { ...currentTask.taskData, ...task });
+            currentTask.taskComponent.taskTitle = task.title ?? currentTask.taskComponent.taskTitle;
+            currentTask.taskComponent.taskDescription = task.description ?? currentTask.taskComponent.taskDescription;
+            currentTask.taskComponent.taskStartDate = task.startDate ?? currentTask.taskComponent.taskStartDate;
+            currentTask.taskComponent.taskEndDate = task.endDate ?? currentTask.taskComponent.taskEndDate;
+            currentTask.taskComponent.updateElements();
+
+            if (currentStatus !== nextStatus && nextStatus) {
+                currentTask.taskComponent.remove();
+                currentStatus.statusData.delete(task.id);
+
+                nextStatus.statusComponent.append(currentTask.taskComponent);
+                nextStatus.statusData.set(task.id, currentTask);
+            }
         }
     }
 }

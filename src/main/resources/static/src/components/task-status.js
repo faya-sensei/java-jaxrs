@@ -1,14 +1,14 @@
-import { TASK_CREATED, TASK_EDITING, TASK_UPDATED } from "./task-event.js";
+import { TASK_CREATED, TASK_UPDATED } from "./task-event.js";
 
 const styleSheet = new CSSStyleSheet();
 styleSheet.replaceSync`
 :host {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  margin: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-  margin: 0.5rem;
 }
 
 .header {
@@ -19,15 +19,38 @@ styleSheet.replaceSync`
 }
 
 .container {
-  flex: 1;
   overflow: auto;
+  flex: 1;
 }
 
 form {
+  display: flex;
   padding: 0.75rem;
+  gap: 0.5rem;
 
   &:hover {
     background-color: #d0d7de33;
+  }
+
+  & > input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  & > button {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    background-color: #1eb2d7;
+
+    &:hover {
+      background-color: #1d82b9;
+    }
   }
 }
 `;
