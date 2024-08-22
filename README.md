@@ -38,6 +38,12 @@ documentation and implement the required logic within the framework. By
 mastering these coding rules and design specifications, you will be
 well-equipped to proficiently use all Java web frameworks.
 
+<details>
+  <summary>Click to check final effect</summary>
+  
+  ![Final Effect](preview.gif)
+</details>
+
 > [!NOTE]
 > The transition from javax to jakarta happened because Oracle transferred Java
 > EE specifications to the Eclipse Foundation, which required a new namespace
