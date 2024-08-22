@@ -41,7 +41,7 @@ well-equipped to proficiently use all Java web frameworks.
 <details>
   <summary>Click to check final effect</summary>
   
-  ![Final Effect](preview.gif)
+  ![Final Effect](docs/preview.gif)
 </details>
 
 > [!NOTE]
